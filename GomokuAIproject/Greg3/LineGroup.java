@@ -18,7 +18,7 @@ public class LineGroup {
     private LocationList white4Threats;
     private LocationList black3Threats;
     private LocationList white3Threats;
-    private LocationList[] threatList;
+    private LocationList[] threatMapList;
 
     public LineGroup(VirtualBoard virtualBoard, Line[] lines){
         this.virtualBoard = virtualBoard;
@@ -37,7 +37,7 @@ public class LineGroup {
         white4Threats = new LocationList();
         black3Threats = new LocationList();
         white3Threats = new LocationList();
-        threatList = new LocationList[]{
+        threatMapList = new LocationList[]{
             black5Threats,
             blackOpen4Threats,
             black4Threats,
@@ -57,8 +57,8 @@ public class LineGroup {
             evaluation += lineEvaluation;
             lineEvaluations[i] = lineEvaluation;
         }
-        clearThreatList();
-        getThreatList();
+        clearThreatMapList();
+        generateThreatMapList();
         int comboScore = getComboScore();
         if(Math.abs(comboScore) == G3Constants.GAME_WILL_BE_OVER){
             return comboScore;
@@ -68,7 +68,7 @@ public class LineGroup {
 
     // assumes LineGroup consists of all 60 lines on board
     public int updateEvaluation(int locationOfStone){
-        clearThreatList();
+        clearThreatMapList();
         // find indexes of lines that need to be updated
         int rowToChange = (locationOfStone / 13);
         int columnToChange = (locationOfStone % 13) + 13;
@@ -92,67 +92,69 @@ public class LineGroup {
             lineEvaluation = myLines[rowToChange].evaluateLine();
             evaluation += lineEvaluation;
             lineEvaluations[rowToChange] = lineEvaluation;
-            //updateThreatList(rowToChange);
+            //updateThreatMapList(rowToChange);
         }
         if(columnToChange >= 13 && columnToChange <= 25){
             evaluation -= lineEvaluations[columnToChange];
             lineEvaluation = myLines[columnToChange].evaluateLine();
             evaluation += lineEvaluation;
             lineEvaluations[columnToChange] = lineEvaluation;
-            //updateThreatList(columnToChange);
+            //updateThreatMapList(columnToChange);
         }
         if(forwardDiagonalToChange >= 26 && forwardDiagonalToChange <= 42){
             evaluation -= lineEvaluations[forwardDiagonalToChange];
             lineEvaluation = myLines[forwardDiagonalToChange].evaluateLine();
             evaluation += lineEvaluation;
             lineEvaluations[forwardDiagonalToChange] = lineEvaluation;
-            //updateThreatList(forwardDiagonalToChange);
+            //updateThreatMapList(forwardDiagonalToChange);
         }
         if(backwardDiagonalToChange >= 43 && backwardDiagonalToChange <= 59){
             evaluation -= lineEvaluations[backwardDiagonalToChange];
             lineEvaluation = myLines[backwardDiagonalToChange].evaluateLine();
             evaluation += lineEvaluation;
             lineEvaluations[backwardDiagonalToChange] = lineEvaluation;
-            //updateThreatList(backwardDiagonalToChange);
+            //updateThreatMapList(backwardDiagonalToChange);
         }
-        getThreatList();
+        generateThreatMapList();
+        if(Math.abs(evaluation) > 50000){
+            return G3Constants.GAME_OVER * (int)Math.signum(evaluation);
+        }
         int comboScore = getComboScore();
         if(Math.abs(comboScore) == G3Constants.GAME_WILL_BE_OVER){
             return comboScore;
-        }
-        if(Math.abs(evaluation) > 50000){
-            return G3Constants.GAME_OVER * (int)Math.signum(evaluation);
         }
         return evaluation + comboScore;
     }
 
     public int getComboScore(){
         if(virtualBoard.isBlackTurn() && black5Threats.getSize() > 0){
+            //System.out.println("BRUH!");
             return -G3Constants.GAME_WILL_BE_OVER;
         }
         if(!virtualBoard.isBlackTurn() && white5Threats.getSize() > 0){
+            //System.out.println("WAHH!");
             return G3Constants.GAME_WILL_BE_OVER;
         }
-        // if(black5Threats.getSize() >= 2){
-        //     return -G3Constants.GAME_WILL_BE_OVER;
-        // }
-        // if(white5Threats.getSize() >= 2){
-        //     return G3Constants.GAME_WILL_BE_OVER;
-        // }
-        // if(virtualBoard.isBlackTurn() && blackOpen4Threats.getSize() > 0 && white5Threats.getSize() == 0){
-        //     return -G3Constants.GAME_WILL_BE_OVER;
-        // }
-        // if(!virtualBoard.isBlackTurn() && whiteOpen4Threats.getSize() > 0 && black5Threats.getSize() == 0){
-        //     return G3Constants.GAME_WILL_BE_OVER;
-        // }
-        // if(!virtualBoard.isBlackTurn() && blackOpen4Threats.getSize() > 0 && black5Threats.getSize() > 0
-        // && !blackOpen4Threats.hasOverlap(black5Threats) && !white4Threats.hasOverlap(black5Threats)){  // should technically be black4Threats for first overlap check
-        //     return -G3Constants.GAME_WILL_BE_OVER;
-        // }
-        // if(virtualBoard.isBlackTurn() && whiteOpen4Threats.getSize() > 0 && white5Threats.getSize() > 0
-        // && !whiteOpen4Threats.hasOverlap(white5Threats) && !black4Threats.hasOverlap(white5Threats)){  // should technically be black4Threats for first overlap check
-        //     return G3Constants.GAME_WILL_BE_OVER;
-        // }
+        if(black5Threats.getSize() >= 2){
+            return -G3Constants.GAME_WILL_BE_OVER;
+        }
+        if(white5Threats.getSize() >= 2){
+            return G3Constants.GAME_WILL_BE_OVER;
+        }
+        if(virtualBoard.isBlackTurn() && blackOpen4Threats.getSize() > 0 && white5Threats.getSize() == 0){
+            return -G3Constants.GAME_WILL_BE_OVER;
+        }
+        if(!virtualBoard.isBlackTurn() && whiteOpen4Threats.getSize() > 0 && black5Threats.getSize() == 0){
+            return G3Constants.GAME_WILL_BE_OVER;
+        }
+        if(!virtualBoard.isBlackTurn() && blackOpen4Threats.getSize() > 0 && black5Threats.getSize() > 0
+        && !black4Threats.hasOverlap(black5Threats) && !white4Threats.hasOverlap(black5Threats)){  // should technically be black4Threats for first overlap check
+            return -G3Constants.GAME_WILL_BE_OVER;
+        }
+        if(virtualBoard.isBlackTurn() && whiteOpen4Threats.getSize() > 0 && white5Threats.getSize() > 0
+        && !white4Threats.hasOverlap(white5Threats) && !black4Threats.hasOverlap(white5Threats)){  // should technically be black4Threats for first overlap check
+            return G3Constants.GAME_WILL_BE_OVER;
+        }
         // if(blackOpen4Threats.getSize() > 2 && !blackOpen4Threats.hasOverlap(white4Threats)){
         //     return -200;
         // }
@@ -162,24 +164,32 @@ public class LineGroup {
         return 0;
     }
 
-    // thoroughly updates the entire threatList
-    private void getThreatList(){
+    // thoroughly updates the entire ThreatMapList
+    private void generateThreatMapList(){
         for(Line line: myLines){
-            for(int i = 0; i < threatList.length; i++){
-                threatList[i].combine(line.getThreatMap(i));
+            for(int i = 0; i < threatMapList.length; i++){
+                threatMapList[i].combine(line.getThreatMap(i));
             }
         }
     }
 
+    public LocationList getThreatMap(int index){    // for debugging
+        return threatMapList[index];
+    }
+
+    public LocationList[] getThreatMapList(){
+        return threatMapList;
+    }
+
     // helper function in updateEvaluation
-    private void updateThreatList(int lineIndex){
-        for(int i = 0; i < threatList.length; i++){
-            threatList[i].combine(myLines[lineIndex].getThreatMap(i));
+    private void updateThreatMapList(int lineIndex){
+        for(int i = 0; i < threatMapList.length; i++){
+            threatMapList[i].combine(myLines[lineIndex].getThreatMap(i));
         }
     }
 
-    private void clearThreatList(){
-        for(LocationList threatMap: threatList){
+    private void clearThreatMapList(){
+        for(LocationList threatMap: threatMapList){
             threatMap.clear();
         }
     }

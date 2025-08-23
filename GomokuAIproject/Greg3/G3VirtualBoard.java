@@ -155,7 +155,7 @@ public class G3VirtualBoard extends VirtualBoard{
     }
 
     // used when initializing virtualBoard
-    public int[][] getEvaluation(){ // returns evaluation in 1st element of 1st array, then returns other threat arrays for move ordering
+    public int getEvaluation(){ // returns evaluation in 1st element of 1st array, then returns other threat arrays for move ordering
         int evaluation = allLines.getEvaluation();
         boolean emptySpaceFound = false;
         for(int i = 0; i < 169; i++){
@@ -166,11 +166,11 @@ public class G3VirtualBoard extends VirtualBoard{
         }
         if(!emptySpaceFound)
             evaluation = G3Constants.GAME_DRAWN;
-        return new int[][]{{evaluation}};
+        return evaluation;
     }
 
     // negative = good for black, positive = good for white
-    public int[][] updateEvaluation(int locationOfStone){ // returns evaluation in 1st element of 1st array, then returns other threat arrays for move ordering
+    public int updateEvaluation(int locationOfStone){ // returns evaluation in 1st element of 1st array, then returns other threat arrays for move ordering
         int evaluation = allLines.updateEvaluation(locationOfStone);
         boolean emptySpaceFound = false;
         for(int i = 0; i < 169; i++){
@@ -181,7 +181,12 @@ public class G3VirtualBoard extends VirtualBoard{
         }
         if(!emptySpaceFound)
             evaluation = G3Constants.GAME_DRAWN;
-        return new int[][]{{evaluation}};    //TODO: implement evaluation
+        return evaluation;    //TODO: implement evaluation
+    }
+
+    // fetches from LineGroup allLines
+    public LocationList[] fetchThreatMapList(){
+        return allLines.getThreatMapList();
     }
 
     private boolean isDraw(){
@@ -193,6 +198,24 @@ public class G3VirtualBoard extends VirtualBoard{
         if(moveExists)
             return false;
         return true;
+    }
+
+    public String debugPrint(boolean forBlack){   // for debugging
+        String print;
+        int threatMapIndex;
+        if(forBlack){
+            print = "Black Threats: ";
+            threatMapIndex = 0;
+        }else{
+            print = "White Threats: ";
+            threatMapIndex = 4;
+        }
+        //return Integer.toString(allLines.getThreatMap(threatMapIndex).getSize());
+        LocationList tempMap = allLines.getThreatMap(threatMapIndex);
+        for(int i = 0; i < tempMap.getSize(); i++){
+            print += tempMap.getLocation(i) + ", ";
+        }
+        return print;
     }
 
 }

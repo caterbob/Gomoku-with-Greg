@@ -124,23 +124,23 @@ public class Line {
         int offset = (forBlack)? 0: 4;  // adjusts which index to use in threatList
 
         if(threatCode == G3Constants.OPEN_FOUR_THREAT_CODE){
-            threatList[1 + offset].addLocation(myCells[index + threatTableEntry[1]]);
+            threatList[G3Constants.OPEN_FOUR_THREAT_INDEX + offset].addLocation(myCells[index + threatTableEntry[1]]);
             if(threatTableEntry[2] != G3Constants.NONEXISTENT_CODE)
-                threatList[1 + offset].addLocation(myCells[index + threatTableEntry[2]]);
+                threatList[G3Constants.OPEN_FOUR_THREAT_INDEX + offset].addLocation(myCells[index + threatTableEntry[2]]);
             for(int i = 3; i < threatTableEntry.length; i++){
-                threatList[2 + offset].addLocation(myCells[index + threatTableEntry[i]]);
+                threatList[G3Constants.FOUR_THREAT_INDEX + offset].addLocation(myCells[index + threatTableEntry[i]]);
             }
         }else if(threatCode == G3Constants.FIVE_THREAT_CODE){
             for(int i = 1; i < threatTableEntry.length; i++){
-                threatList[0 + offset].addLocation(myCells[index + threatTableEntry[i]]);
+                threatList[G3Constants.FIVE_THREAT_INDEX + offset].addLocation(myCells[index + threatTableEntry[i]]);
             }
         }else if(threatCode == G3Constants.FOUR_THREAT_CODE){
             for(int i = 1; i < threatTableEntry.length; i++){
-                threatList[2 + offset].addLocation(myCells[index + threatTableEntry[i]]);
+                threatList[G3Constants.FOUR_THREAT_INDEX + offset].addLocation(myCells[index + threatTableEntry[i]]);
             }
         }else if(threatCode == G3Constants.THREE_THREAT_CODE){
             for(int i = 1; i < threatTableEntry.length; i++){
-                threatList[3 + offset].addLocation(myCells[index + threatTableEntry[i]]);
+                threatList[G3Constants.THREE_THREAT_INDEX + offset].addLocation(myCells[index + threatTableEntry[i]]);
             }
         }
     }

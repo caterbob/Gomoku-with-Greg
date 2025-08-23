@@ -91,6 +91,12 @@ public final class G3Constants {
 
     public static final int WIN_VALUE = 99999; // ex: X X X X X
 
+    // Threat Map List Indexes
+    public static final int FIVE_THREAT_INDEX = 0;
+    public static final int OPEN_FOUR_THREAT_INDEX = 1;
+    public static final int FOUR_THREAT_INDEX = 2;
+    public static final int THREE_THREAT_INDEX = 3;
+
     // SEGMENT SCORE TABLE
     // 5-bit mask representing 1st stone, 2nd stone, ...
     public static final int[] SEGMENT_SCORE_TABLE = {

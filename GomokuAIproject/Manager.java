@@ -42,6 +42,10 @@ public class Manager {
                 } catch(InterruptedException e){
                     Thread.currentThread().interrupt();
                 }
+                // g3Board.sync();
+                // g3Board.updateEvaluation(board.getLastMove());
+                // System.out.println(g3Board.debugPrint(true));
+                // System.out.println(g3Board.debugPrint(false));
                 //System.out.println("G3 Eval: " + g3Board.getEvaluation()[0][0] / 10);
                 // System.out.println("-------------");
                 // g3Board.placeStone(board.getLastMove());

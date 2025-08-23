@@ -112,7 +112,7 @@ public class DisplayBoard {
         public ActionListener myAction(){
             return new ActionListener(){
                 public void actionPerformed(ActionEvent e){
-                    if(/*Manager.canPlayerMove()*/true && !board.isGameOver()){
+                    if(Manager.canPlayerMove() && !board.isGameOver()){
                         board.placeStone(myLocation);
                         updateDisplay();
                     }
