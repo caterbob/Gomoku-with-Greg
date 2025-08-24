@@ -28,7 +28,7 @@ public class Manager {
         engineRunning = engine;
         board = Board.getInstance();
         Manager.isPlayerBlack = isPlayerBlack;
-        G3VirtualBoard g3Board = new G3VirtualBoard(isPlayerBlack);
+        //G3VirtualBoard g3Board = new G3VirtualBoard(isPlayerBlack);
 
         Thread gameLoop = new Thread(() ->{
 
@@ -83,7 +83,7 @@ public class Manager {
 
 
     // engine1 starts as black, engine2 as white
-    public static void runEngineVEngine(Engine engine1, Engine engine2, int numberOfRounds, boolean randomStart){
+    public static void runEngineVEngine(Engine engine1, Engine engine2, int numberOfRounds, boolean randomStart, boolean exportGames){
         gameMode = GameMode.ENGINE_VS_ENGINE;
         board = Board.getInstance();
 
@@ -176,9 +176,11 @@ public class Manager {
                         outcome += "T";
                     }
     
-                    System.out.println("Match: " + (round * 2 + match) + ", Outcome: " + outcome + ", Export: " + Board.exportGame());
+                    if(exportGames)
+                        System.out.println("Match: " + (round * 2 + match) + ", Outcome: " + outcome + ", Export: " + Board.exportGame());
                 }
-                System.out.println();
+                if(exportGames)
+                    System.out.println();
             }
 
             System.out.println("Engine 1 Wins: " + engine1Wins + ", Engine 2 Wins: " + engine2Wins);
@@ -201,6 +203,8 @@ public class Manager {
             // for(int i = 0; i < engine2Times.size(); i++){
             //     System.out.print(engine2Times.get(i) + " ");
             // }
+            double winPercentage = (engine1Wins + ties * 0.5) / (numberOfRounds * 2.0) * 100.0;
+            System.out.println("Engine 1 Win %: " + winPercentage + "%");
         });
 
         gameLoop.start();

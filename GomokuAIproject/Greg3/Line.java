@@ -20,8 +20,9 @@ public class Line {
     private LocationList[] threatList;
 
     private int numberOfSpecial3;
+    private int[] segmentScoreTableUsed;
 
-    public Line(VirtualBoard virtualBoard, int[] cells){   // pass in virtual board the cells in the line
+    public Line(VirtualBoard virtualBoard, int[] cells, boolean testSegmentScores){   // pass in virtual board the cells in the line
         this.virtualBoard = virtualBoard;
         evaluation = 0;
         myCells = cells;
@@ -44,6 +45,11 @@ public class Line {
             white3Threats
         };
         numberOfSpecial3 = 0;
+        if(testSegmentScores){
+            segmentScoreTableUsed = G3Constants.TEST_SEGMENT_SCORE_TABLE;
+        }else{
+            segmentScoreTableUsed = G3Constants.SEGMENT_SCORE_TABLE;
+        }
     }
 
     // gets current evaluation (without modification)
@@ -76,10 +82,10 @@ public class Line {
 
         // evaluate initial mask segments
         if((whiteMask & 0b11111) == 0){
-            evaluation -= G3Constants.SEGMENT_SCORE_TABLE[blackMask & 0b11111];
+            evaluation -= segmentScoreTableUsed[blackMask & 0b11111];
             updateThreatMaps(transformSegment(blackMask, whiteMask), 6, true);
         }else if((blackMask & 0b11111) == 0){
-            evaluation += G3Constants.SEGMENT_SCORE_TABLE[whiteMask & 0b11111];
+            evaluation += segmentScoreTableUsed[whiteMask & 0b11111];
             updateThreatMaps(transformSegment(whiteMask, blackMask), 6, false);
         }
 
@@ -88,10 +94,10 @@ public class Line {
             blackMask = updateSegmentMask(blackMask, virtualBoard.getCellValue(myCells[i]) & 1);
             whiteMask = updateSegmentMask(whiteMask, virtualBoard.getCellValue(myCells[i]) >> 1);
             if((whiteMask & 0b11111) == 0){ // if first five bits (actual segment) is empty
-                evaluation -= G3Constants.SEGMENT_SCORE_TABLE[blackMask & 0b11111]; 
+                evaluation -= segmentScoreTableUsed[blackMask & 0b11111]; 
                 updateThreatMaps(transformSegment(blackMask, whiteMask), i, true);
             }else if((blackMask & 0b11111) == 0){
-                evaluation += G3Constants.SEGMENT_SCORE_TABLE[whiteMask & 0b11111];
+                evaluation += segmentScoreTableUsed[whiteMask & 0b11111];
                 updateThreatMaps(transformSegment(whiteMask, blackMask), i, false);
             }
         }
@@ -138,11 +144,12 @@ public class Line {
             for(int i = 1; i < threatTableEntry.length; i++){
                 threatList[G3Constants.FOUR_THREAT_INDEX + offset].addLocation(myCells[index + threatTableEntry[i]]);
             }
-        }else if(threatCode == G3Constants.THREE_THREAT_CODE){
-            for(int i = 1; i < threatTableEntry.length; i++){
-                threatList[G3Constants.THREE_THREAT_INDEX + offset].addLocation(myCells[index + threatTableEntry[i]]);
-            }
         }
+        // }else if(threatCode == G3Constants.THREE_THREAT_CODE){
+        //     for(int i = 1; i < threatTableEntry.length; i++){
+        //         threatList[G3Constants.THREE_THREAT_INDEX + offset].addLocation(myCells[index + threatTableEntry[i]]);
+        //     }
+        // }
     }
 
     public LocationList getThreatMap(int threatListIndex){

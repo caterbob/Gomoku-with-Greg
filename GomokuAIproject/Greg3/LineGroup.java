@@ -68,7 +68,6 @@ public class LineGroup {
 
     // assumes LineGroup consists of all 60 lines on board
     public int updateEvaluation(int locationOfStone){
-        clearThreatMapList();
         // find indexes of lines that need to be updated
         int rowToChange = (locationOfStone / 13);
         int columnToChange = (locationOfStone % 13) + 13;
@@ -89,33 +88,36 @@ public class LineGroup {
         // if line exists, subtract old eval and add new eval
         if(rowToChange >= 0 && rowToChange <= 12){
             evaluation -= lineEvaluations[rowToChange];
+            subtractLineThreatMaps(myLines[rowToChange]);
             lineEvaluation = myLines[rowToChange].evaluateLine();
             evaluation += lineEvaluation;
+            addLineThreatMaps(myLines[rowToChange]);
             lineEvaluations[rowToChange] = lineEvaluation;
-            //updateThreatMapList(rowToChange);
         }
         if(columnToChange >= 13 && columnToChange <= 25){
             evaluation -= lineEvaluations[columnToChange];
+            subtractLineThreatMaps(myLines[columnToChange]);
             lineEvaluation = myLines[columnToChange].evaluateLine();
             evaluation += lineEvaluation;
+            addLineThreatMaps(myLines[columnToChange]);
             lineEvaluations[columnToChange] = lineEvaluation;
-            //updateThreatMapList(columnToChange);
         }
         if(forwardDiagonalToChange >= 26 && forwardDiagonalToChange <= 42){
             evaluation -= lineEvaluations[forwardDiagonalToChange];
+            subtractLineThreatMaps(myLines[forwardDiagonalToChange]);
             lineEvaluation = myLines[forwardDiagonalToChange].evaluateLine();
             evaluation += lineEvaluation;
+            addLineThreatMaps(myLines[forwardDiagonalToChange]);
             lineEvaluations[forwardDiagonalToChange] = lineEvaluation;
-            //updateThreatMapList(forwardDiagonalToChange);
         }
         if(backwardDiagonalToChange >= 43 && backwardDiagonalToChange <= 59){
             evaluation -= lineEvaluations[backwardDiagonalToChange];
+            subtractLineThreatMaps(myLines[backwardDiagonalToChange]);
             lineEvaluation = myLines[backwardDiagonalToChange].evaluateLine();
             evaluation += lineEvaluation;
+            addLineThreatMaps(myLines[backwardDiagonalToChange]);
             lineEvaluations[backwardDiagonalToChange] = lineEvaluation;
-            //updateThreatMapList(backwardDiagonalToChange);
         }
-        generateThreatMapList();
         if(Math.abs(evaluation) > 50000){
             return G3Constants.GAME_OVER * (int)Math.signum(evaluation);
         }
@@ -181,10 +183,15 @@ public class LineGroup {
         return threatMapList;
     }
 
-    // helper function in updateEvaluation
-    private void updateThreatMapList(int lineIndex){
+    public void subtractLineThreatMaps(Line line){
         for(int i = 0; i < threatMapList.length; i++){
-            threatMapList[i].combine(myLines[lineIndex].getThreatMap(i));
+            threatMapList[i].subtract(line.getThreatMap(i));
+        }
+    }
+
+    public void addLineThreatMaps(Line line){
+        for(int i = 0; i < threatMapList.length; i++){
+            threatMapList[i].combine(line.getThreatMap(i));
         }
     }
 

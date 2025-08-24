@@ -14,9 +14,9 @@ public class Greg3 implements Engine{
     private int depth;
 
     
-    public Greg3(boolean isOpponentBlack, int depth){
+    public Greg3(boolean isOpponentBlack, int depth, boolean testSegments){
         this.isOpponentBlack = isOpponentBlack;
-        myVirtualBoard = new G3VirtualBoard(isOpponentBlack);
+        myVirtualBoard = new G3VirtualBoard(isOpponentBlack, testSegments);
         this.depth = depth;
     }
 
@@ -36,6 +36,7 @@ public class Greg3 implements Engine{
         //     return -1;
         // }
         myVirtualBoard.sync();  // syncs to current board state and clears move history
+        myVirtualBoard.getEvaluation();
         ArrayList<Integer> moves = myVirtualBoard.getCandidateMoves();
         SuperMove bestMoveFound = minimax(depth, depth, isOpponentBlack, board.getLastMove(), Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY);   //make sure two numbers are the same
         int myMove = bestMoveFound.getMoveLocation();
@@ -45,7 +46,8 @@ public class Greg3 implements Engine{
 
     // also adds reach moves (gap of 1 if also a threat of some kind)
     private void orderMoves(ArrayList<Integer> moves, LocationList[] threatMapList){
-        for(int threatMapIndex = G3Constants.THREE_THREAT_INDEX;
+        
+        for(int threatMapIndex = G3Constants.FOUR_THREAT_INDEX; // previously THREE
         threatMapIndex >= G3Constants.FIVE_THREAT_INDEX; threatMapIndex--){
             for(int moveIndex = 0; moveIndex < moves.size(); moveIndex++){
                 int move = moves.get(moveIndex);
@@ -57,6 +59,8 @@ public class Greg3 implements Engine{
             }
         }
     }
+
+    
 
     public SuperMove minimax(int originalDepth, int depth, boolean isMaximizingPlayer, int movePlayed, double alpha, double beta){
 

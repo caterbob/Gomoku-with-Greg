@@ -74,22 +74,42 @@ public final class G3Constants {
 
     // SEGMENT VALUES
     public static final int EMPTY_VALUE = 0;
-    public static final int SINGLE_1_VALUE = 0;
+    public static final int SINGLE_1_VALUE = 2;
 
     public static final int CONNECTED_2_VALUE = 20; // ex: _ _ X X _    (0 space)
-    public static final int DISCONNECTED_2_VALUE = 20; // ex: _ X _ X _ (1 space)
-    public static final int GAP_2_VALUE = 20; // ex: X _ _ X _  (2 spaces)
-    public static final int SEVERED_2_VALUE = 20; // ex: X _ _ _ X  (3 spaces)
+    public static final int DISCONNECTED_2_VALUE = 17; // ex: _ X _ X _ (1 space)
+    public static final int GAP_2_VALUE = 10; // ex: X _ _ X _  (2 spaces)
+    public static final int SEVERED_2_VALUE = 10; // ex: X _ _ _ X  (3 spaces)
     
-    public static final int CONNECTED_3_VALUE = 50; // ex: X X X _ _ (0 space)
-    public static final int DISCONNECTED_3_VALUE = 50; // ex: X _ X X _ (1 space)
-    public static final int GAP_3_VALUE = 50;   // ex: X _ _ X X (2 spaces)
-    public static final int BROKEN_3_VALUE = 50; // ex: X _ X _ X (2 spaces spread out
+    public static final int CONNECTED_3_VALUE = 58; // ex: X X X _ _ (0 space)
+    public static final int DISCONNECTED_3_VALUE = 52; // ex: X _ X X _ (1 space)
+    public static final int GAP_3_VALUE = 52;   // ex: X _ _ X X (2 spaces)
+    public static final int BROKEN_3_VALUE = 52; // ex: X _ X _ X (2 spaces spread out
     
     public static final int CONNECTED_4_VALUE = 80; // ex: X X X X _ (0 space)
     public static final int DISCONNECTED_4_VALUE = 80; // ex: X _ X X X (1 space)
 
     public static final int WIN_VALUE = 99999; // ex: X X X X X
+
+    // NEW SEGMENT VALUES
+    public static final int NEW_EMPTY_VALUE = 0;
+    public static final int NEW_SINGLE_1_VALUE = 2;
+
+    public static final int NEW_CONNECTED_2_VALUE = 20; // ex: _ _ X X _    (0 space)
+    public static final int NEW_DISCONNECTED_2_VALUE = (int)Math.round(NEW_CONNECTED_2_VALUE * 0.85); // ex: _ X _ X _ (1 space)
+    public static final int NEW_GAP_2_VALUE = (int)Math.round(NEW_CONNECTED_2_VALUE * 0.5); // ex: X _ _ X _  (2 spaces)
+    public static final int NEW_SEVERED_2_VALUE = (int)Math.round(NEW_CONNECTED_2_VALUE * 0.5); // ex: X _ _ _ X  (3 spaces)
+
+    public static final int NEW_CONNECTED_3_VALUE = 58; // ex: X X X _ _ (0 space)
+    public static final int NEW_DISCONNECTED_3_VALUE = 52; // ex: X _ X X _ (1 space)
+    public static final int NEW_GAP_3_VALUE = 52;   // ex: X _ _ X X (2 spaces)
+    public static final int NEW_BROKEN_3_VALUE = 52; // ex: X _ X _ X (2 spaces spread out)
+
+    public static final int NEW_CONNECTED_4_VALUE = 80; // ex: X X X X _ (0 space)
+    public static final int NEW_DISCONNECTED_4_VALUE = 80; // ex: X _ X X X (1 space)
+
+    public static final int NEW_WIN_VALUE = 99999; // ex: X X X X X
+
 
     // Threat Map List Indexes
     public static final int FIVE_THREAT_INDEX = 0;
@@ -132,6 +152,41 @@ public final class G3Constants {
         DISCONNECTED_4_VALUE,    // 11101
         CONNECTED_4_VALUE,    // 11110
         WIN_VALUE,    // 11111
+    };
+
+    public static final int[] TEST_SEGMENT_SCORE_TABLE = {
+        NEW_EMPTY_VALUE,            // 00000
+        NEW_SINGLE_1_VALUE,         // 00001
+        NEW_SINGLE_1_VALUE,         // 00010
+        NEW_CONNECTED_2_VALUE,      // 00011
+        NEW_SINGLE_1_VALUE,         // 00100
+        NEW_DISCONNECTED_2_VALUE,   // 00101
+        NEW_CONNECTED_2_VALUE,      // 00110
+        NEW_CONNECTED_3_VALUE,      // 00111
+        NEW_SINGLE_1_VALUE,         // 01000
+        NEW_GAP_2_VALUE,            // 01001
+        NEW_DISCONNECTED_2_VALUE,   // 01010
+        NEW_DISCONNECTED_3_VALUE,   // 01011
+        NEW_CONNECTED_2_VALUE,      // 01100
+        NEW_DISCONNECTED_3_VALUE,   // 01101
+        NEW_CONNECTED_3_VALUE,      // 01110
+        NEW_CONNECTED_4_VALUE,      // 01111
+        NEW_SINGLE_1_VALUE,         // 10000
+        NEW_SEVERED_2_VALUE,        // 10001
+        NEW_GAP_2_VALUE,            // 10010
+        NEW_GAP_3_VALUE,            // 10011
+        NEW_DISCONNECTED_2_VALUE,   // 10100
+        NEW_BROKEN_3_VALUE,         // 10101
+        NEW_DISCONNECTED_3_VALUE,   // 10110
+        NEW_DISCONNECTED_4_VALUE,   // 10111
+        NEW_CONNECTED_2_VALUE,      // 11000
+        NEW_GAP_3_VALUE,            // 11001
+        NEW_DISCONNECTED_3_VALUE,   // 11010
+        NEW_DISCONNECTED_4_VALUE,   // 11011
+        NEW_CONNECTED_3_VALUE,      // 11100
+        NEW_DISCONNECTED_4_VALUE,   // 11101
+        NEW_CONNECTED_4_VALUE,      // 11110
+        NEW_WIN_VALUE,              // 11111
     };
     
     // Threat table codes. 2nd number in each int[] that help distinguish what type of threat the locations are
