@@ -1,5 +1,6 @@
 package GomokuAIproject.Greg3;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -13,6 +14,7 @@ public class G3VirtualBoard extends VirtualBoard{
 
     private ArrayList<Integer> moveHistory;
     private LineGroup allLines;
+    private ArrayList<Integer> candidateMoves;
 
     public G3VirtualBoard(boolean isOpponentBlack, boolean testSegments){
         super(Board.getInstance(), isOpponentBlack);
@@ -81,6 +83,7 @@ public class G3VirtualBoard extends VirtualBoard{
             new Line(this, G3Constants.backwardDiagonal16, testSegments)
         });
         allLines.getEvaluation();
+        candidateMoves = new ArrayList<Integer>();
     }
 
     public G3VirtualBoard(G3VirtualBoard toCopy){
@@ -106,29 +109,50 @@ public class G3VirtualBoard extends VirtualBoard{
 
     public void sync(){
         super.sync();
-        clearMoveHistory();
+        candidateMoves.clear();
         getEvaluation();
+        clearMoveHistory();
+        for(int move: Board.getMoveHistory()){
+            moveHistory.add(move);
+        }
     }
 
     public ArrayList<Integer> getCandidateMoves(){
-        ArrayList<Integer> moves = new ArrayList<Integer>();
-
+        candidateMoves.clear();
         // finds moves that are adjacent to stones already placed
         for(int i = 0; i < 169; i++){
             if(super.getCellValue(i) != BoardConstants.EMPTY){
                 for(int offset: OffsetConstants.REAL_OFFSETS){
-                    if(isMoveValid(i, offset) && !moves.contains(i + offset))
-                        moves.add(i + offset);
+                    if(isMoveValid(i, offset) && !candidateMoves.contains(i + offset))
+                        candidateMoves.add(i + offset);
                     // if(isMoveValid(i + offset, offset) && !moves.contains(i + 2 * offset))
                     //     moves.add(i + 2 * offset);
                 }
             }
         }
 
-        if(moves.size() == 0){
-            moves.add(84);  // if stones placed yet, add possible move at center
+        if(candidateMoves.size() == 0){
+            candidateMoves.add(84);  // if stones placed yet, add possible move at center
         }
+        ArrayList<Integer> moves = new ArrayList<Integer>(candidateMoves);
         return moves;
+    }
+
+    // updates move list efficiently using location of last placed stone
+    public ArrayList<Integer> updateCandidateMoves(int locationOfStone){
+        candidateMoves.remove(Integer.valueOf(locationOfStone));
+        for(int offset: OffsetConstants.REAL_OFFSETS){
+            if(isMoveValid(locationOfStone, offset) && !candidateMoves.contains(locationOfStone + offset))
+                candidateMoves.add(locationOfStone + offset);
+            // if(isMoveValid(i + offset, offset) && !moves.contains(i + 2 * offset))
+            //     moves.add(i + 2 * offset);
+        }
+        ArrayList<Integer> moves = new ArrayList<Integer>(candidateMoves);
+        return moves;
+    }
+
+    public void setCandidateMoves(ArrayList<Integer> toBeSet){
+        candidateMoves = new ArrayList<Integer>(toBeSet);
     }
 
     public boolean placeStone(int location){
@@ -172,16 +196,12 @@ public class G3VirtualBoard extends VirtualBoard{
     // negative = good for black, positive = good for white
     public int updateEvaluation(int locationOfStone){ // returns evaluation in 1st element of 1st array, then returns other threat arrays for move ordering
         int evaluation = allLines.updateEvaluation(locationOfStone);
-        boolean emptySpaceFound = false;
-        for(int i = 0; i < 169; i++){
-            if(getCellValue(i) == BoardConstants.EMPTY){
-                emptySpaceFound = true;
-                break;
-            }
-        }
-        if(!emptySpaceFound)
+
+        if(candidateMoves.size() == 1){ // candidateMoves is from before last move, so now must be 0 (draw)
             evaluation = G3Constants.GAME_DRAWN;
-        return evaluation;    //TODO: implement evaluation
+        }
+
+        return evaluation;
     }
 
     // fetches from LineGroup allLines

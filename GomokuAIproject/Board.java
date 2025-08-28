@@ -37,6 +37,10 @@ public class Board {
         return -1;
     }
 
+    public static ArrayList<Integer> getMoveHistory(){
+        return moveHistory;
+    }
+
     // returns true if location is valid
     public boolean placeStone(int location){
         if(location >= 0 && location <= 168 && board[location] == 0){

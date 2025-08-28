@@ -74,17 +74,17 @@ public final class G3Constants {
 
     // SEGMENT VALUES
     public static final int EMPTY_VALUE = 0;
-    public static final int SINGLE_1_VALUE = 2;
+    public static final int SINGLE_1_VALUE = 0;
 
     public static final int CONNECTED_2_VALUE = 20; // ex: _ _ X X _    (0 space)
-    public static final int DISCONNECTED_2_VALUE = 17; // ex: _ X _ X _ (1 space)
-    public static final int GAP_2_VALUE = 10; // ex: X _ _ X _  (2 spaces)
-    public static final int SEVERED_2_VALUE = 10; // ex: X _ _ _ X  (3 spaces)
+    public static final int DISCONNECTED_2_VALUE = 20; // ex: _ X _ X _ (1 space)
+    public static final int GAP_2_VALUE = 20; // ex: X _ _ X _  (2 spaces)
+    public static final int SEVERED_2_VALUE = 20; // ex: X _ _ _ X  (3 spaces)
     
-    public static final int CONNECTED_3_VALUE = 58; // ex: X X X _ _ (0 space)
-    public static final int DISCONNECTED_3_VALUE = 52; // ex: X _ X X _ (1 space)
-    public static final int GAP_3_VALUE = 52;   // ex: X _ _ X X (2 spaces)
-    public static final int BROKEN_3_VALUE = 52; // ex: X _ X _ X (2 spaces spread out
+    public static final int CONNECTED_3_VALUE = 50; // ex: X X X _ _ (0 space)
+    public static final int DISCONNECTED_3_VALUE = 50; // ex: X _ X X _ (1 space)
+    public static final int GAP_3_VALUE = 50;   // ex: X _ _ X X (2 spaces)
+    public static final int BROKEN_3_VALUE = 50; // ex: X _ X _ X (2 spaces spread out
     
     public static final int CONNECTED_4_VALUE = 80; // ex: X X X X _ (0 space)
     public static final int DISCONNECTED_4_VALUE = 80; // ex: X _ X X X (1 space)

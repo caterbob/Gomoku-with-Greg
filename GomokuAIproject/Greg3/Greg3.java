@@ -46,8 +46,7 @@ public class Greg3 implements Engine{
 
     // also adds reach moves (gap of 1 if also a threat of some kind)
     private void orderMoves(ArrayList<Integer> moves, LocationList[] threatMapList){
-        
-        for(int threatMapIndex = G3Constants.FOUR_THREAT_INDEX; // previously THREE
+        for(int threatMapIndex = G3Constants.THREE_THREAT_INDEX;
         threatMapIndex >= G3Constants.FIVE_THREAT_INDEX; threatMapIndex--){
             for(int moveIndex = 0; moveIndex < moves.size(); moveIndex++){
                 int move = moves.get(moveIndex);
@@ -82,15 +81,17 @@ public class Greg3 implements Engine{
             }
         }
 
+        ArrayList<Integer> moves = myVirtualBoard.updateCandidateMoves(movePlayed);
+
         if(isMaximizingPlayer){
             SuperMove bestMove = new SuperMove(-1, Double.NEGATIVE_INFINITY);
-            ArrayList<Integer> moves = myVirtualBoard.getCandidateMoves();
             orderMoves(moves, myVirtualBoard.fetchThreatMapList());
             double newestScore;
             for(int moveIndex = 0; moveIndex < moves.size(); moveIndex++){
                 myVirtualBoard.placeStone(moves.get(moveIndex));
                 newestScore = minimax(originalDepth, depth - 1, !isMaximizingPlayer, moves.get(moveIndex), alpha, beta).getScore();
                 myVirtualBoard.undoStone();
+                myVirtualBoard.setCandidateMoves(moves);
                 myVirtualBoard.updateEvaluation(moves.get(moveIndex));
                 if(newestScore > bestMove.getScore()){
                     bestMove = new SuperMove(moves.get(moveIndex), newestScore);
@@ -106,13 +107,13 @@ public class Greg3 implements Engine{
 
         else{   // Minimizing Player
             SuperMove bestMove = new SuperMove(-1, Double.POSITIVE_INFINITY);
-            ArrayList<Integer> moves = myVirtualBoard.getCandidateMoves();
             orderMoves(moves, myVirtualBoard.fetchThreatMapList());
             double newestScore;
             for(int moveIndex = 0; moveIndex < moves.size(); moveIndex++){
                 myVirtualBoard.placeStone(moves.get(moveIndex));
                 newestScore = minimax(originalDepth, depth - 1, !isMaximizingPlayer, moves.get(moveIndex), alpha, beta).getScore();
                 myVirtualBoard.undoStone();
+                myVirtualBoard.setCandidateMoves(moves);
                 myVirtualBoard.updateEvaluation(moves.get(moveIndex));
                 if(newestScore < bestMove.getScore()){
                     bestMove = new SuperMove(moves.get(moveIndex), newestScore);

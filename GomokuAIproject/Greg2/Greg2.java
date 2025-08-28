@@ -53,7 +53,7 @@ public class Greg2 implements Engine{
     }
 
     private void orderMoves(ArrayList<Integer> moves, int[][] evaluationData){
-        for(int threatListIndex = 1; threatListIndex < 4; threatListIndex += 2){
+        for(int threatListIndex = 1; threatListIndex < 8; threatListIndex += 2){
             int[] threatList = evaluationData[threatListIndex];
             for(int threatLocationIndex = 0; threatLocationIndex < evaluationData[threatListIndex + 1][0]; threatLocationIndex++){
                 int threatLocation = threatList[threatLocationIndex];
