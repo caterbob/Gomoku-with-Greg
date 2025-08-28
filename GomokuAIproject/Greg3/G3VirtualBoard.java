@@ -1,6 +1,5 @@
 package GomokuAIproject.Greg3;
 
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -111,23 +110,23 @@ public class G3VirtualBoard extends VirtualBoard{
         getEvaluation();
     }
 
-    public LocationList getCandidateMoves(){
-        LocationList moves = new LocationList();
+    public ArrayList<Integer> getCandidateMoves(){
+        ArrayList<Integer> moves = new ArrayList<Integer>();
 
         // finds moves that are adjacent to stones already placed
         for(int i = 0; i < 169; i++){
             if(super.getCellValue(i) != BoardConstants.EMPTY){
                 for(int offset: OffsetConstants.REAL_OFFSETS){
-                    if(isMoveValid(i, offset) && !moves.containsLocation(i + offset))
-                        moves.addLocation(i + offset);
+                    if(isMoveValid(i, offset) && !moves.contains(i + offset))
+                        moves.add(i + offset);
                     // if(isMoveValid(i + offset, offset) && !moves.contains(i + 2 * offset))
                     //     moves.add(i + 2 * offset);
                 }
             }
         }
 
-        if(moves.getSize() == 0){
-            moves.addLocation(84);  // if stones placed yet, add possible move at center
+        if(moves.size() == 0){
+            moves.add(84);  // if stones placed yet, add possible move at center
         }
         return moves;
     }

@@ -37,7 +37,7 @@ public class Greg3 implements Engine{
         // }
         myVirtualBoard.sync();  // syncs to current board state and clears move history
         myVirtualBoard.getEvaluation();
-        LocationList moves = myVirtualBoard.getCandidateMoves();
+        ArrayList<Integer> moves = myVirtualBoard.getCandidateMoves();
         SuperMove bestMoveFound = minimax(depth, depth, isOpponentBlack, board.getLastMove(), Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY);   //make sure two numbers are the same
         int myMove = bestMoveFound.getMoveLocation();
         return myMove;
@@ -45,14 +45,16 @@ public class Greg3 implements Engine{
     }
 
     // also adds reach moves (gap of 1 if also a threat of some kind)
-    private void orderMoves(LocationList moves, LocationList[] threatMapList){
+    private void orderMoves(ArrayList<Integer> moves, LocationList[] threatMapList){
+        
         for(int threatMapIndex = G3Constants.FOUR_THREAT_INDEX; // previously THREE
         threatMapIndex >= G3Constants.FIVE_THREAT_INDEX; threatMapIndex--){
-            for(int moveIndex = 0; moveIndex < moves.getSize(); moveIndex++){
-                int move = moves.getLocation(moveIndex);
+            for(int moveIndex = 0; moveIndex < moves.size(); moveIndex++){
+                int move = moves.get(moveIndex);
                 if(threatMapList[threatMapIndex].containsLocation(move) || 
                 threatMapList[threatMapIndex + 4].containsLocation(move)){ 
-                    moves.bringLocationToFront(moveIndex); // if move found in BLACK or WHITE threatMap, bring it to front
+                    moves.remove(moveIndex); // if move found in BLACK or WHITE threatMap, bring it to front
+                    moves.add(0, move);
                 }
             }
         }
@@ -82,16 +84,16 @@ public class Greg3 implements Engine{
 
         if(isMaximizingPlayer){
             SuperMove bestMove = new SuperMove(-1, Double.NEGATIVE_INFINITY);
-            LocationList moves = myVirtualBoard.getCandidateMoves();
+            ArrayList<Integer> moves = myVirtualBoard.getCandidateMoves();
             orderMoves(moves, myVirtualBoard.fetchThreatMapList());
             double newestScore;
-            for(int moveIndex = 0; moveIndex < moves.getSize(); moveIndex++){
-                myVirtualBoard.placeStone(moves.getLocation(moveIndex));
-                newestScore = minimax(originalDepth, depth - 1, !isMaximizingPlayer, moves.getLocation(moveIndex), alpha, beta).getScore();
+            for(int moveIndex = 0; moveIndex < moves.size(); moveIndex++){
+                myVirtualBoard.placeStone(moves.get(moveIndex));
+                newestScore = minimax(originalDepth, depth - 1, !isMaximizingPlayer, moves.get(moveIndex), alpha, beta).getScore();
                 myVirtualBoard.undoStone();
-                myVirtualBoard.updateEvaluation(moves.getLocation(moveIndex));
+                myVirtualBoard.updateEvaluation(moves.get(moveIndex));
                 if(newestScore > bestMove.getScore()){
-                    bestMove = new SuperMove(moves.getLocation(moveIndex), newestScore);
+                    bestMove = new SuperMove(moves.get(moveIndex), newestScore);
                 }
                 if(bestMove.getScore() > alpha)
                     alpha = bestMove.getScore();
@@ -104,16 +106,16 @@ public class Greg3 implements Engine{
 
         else{   // Minimizing Player
             SuperMove bestMove = new SuperMove(-1, Double.POSITIVE_INFINITY);
-            LocationList moves = myVirtualBoard.getCandidateMoves();
+            ArrayList<Integer> moves = myVirtualBoard.getCandidateMoves();
             orderMoves(moves, myVirtualBoard.fetchThreatMapList());
             double newestScore;
-            for(int moveIndex = 0; moveIndex < moves.getSize(); moveIndex++){
-                myVirtualBoard.placeStone(moves.getLocation(moveIndex));
-                newestScore = minimax(originalDepth, depth - 1, !isMaximizingPlayer, moves.getLocation(moveIndex), alpha, beta).getScore();
+            for(int moveIndex = 0; moveIndex < moves.size(); moveIndex++){
+                myVirtualBoard.placeStone(moves.get(moveIndex));
+                newestScore = minimax(originalDepth, depth - 1, !isMaximizingPlayer, moves.get(moveIndex), alpha, beta).getScore();
                 myVirtualBoard.undoStone();
-                myVirtualBoard.updateEvaluation(moves.getLocation(moveIndex));
+                myVirtualBoard.updateEvaluation(moves.get(moveIndex));
                 if(newestScore < bestMove.getScore()){
-                    bestMove = new SuperMove(moves.getLocation(moveIndex), newestScore);
+                    bestMove = new SuperMove(moves.get(moveIndex), newestScore);
                 }
                 if(bestMove.getScore() < beta)
                     beta = bestMove.getScore();
