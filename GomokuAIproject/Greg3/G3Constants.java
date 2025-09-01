@@ -2,6 +2,9 @@ package GomokuAIproject.Greg3;
 
 public final class G3Constants {
 
+    // maximum positions held in the transposition table
+    public static final int TTSize = 6000000;
+
     public static final int GAME_WILL_BE_OVER = 99998;
     public static final int GAME_OVER = 99999;
     public static final int GAME_DRAWN = 500000;

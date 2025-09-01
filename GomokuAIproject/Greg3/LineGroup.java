@@ -157,12 +157,12 @@ public class LineGroup {
         && !white4Threats.hasOverlap(white5Threats) && !black4Threats.hasOverlap(white5Threats)){  // should technically be black4Threats for first overlap check
             return G3Constants.GAME_WILL_BE_OVER;
         }
-        // if(blackOpen4Threats.getSize() > 2 && !blackOpen4Threats.hasOverlap(white4Threats)){
-        //     return -200;
-        // }
-        // if(whiteOpen4Threats.getSize() > 2 && !whiteOpen4Threats.hasOverlap(black4Threats)){
-        //     return 200;
-        // }
+        if(blackOpen4Threats.getSize() > 2 && !blackOpen4Threats.hasOverlap(white4Threats)){
+            return -200;
+        }
+        if(whiteOpen4Threats.getSize() > 2 && !whiteOpen4Threats.hasOverlap(black4Threats)){
+            return 200;
+        }
         return 0;
     }
 

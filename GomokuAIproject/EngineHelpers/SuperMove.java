@@ -28,4 +28,10 @@ public class SuperMove{
         return score;
     }
 
+    // used to avoid creating more objects than necessary
+    public void set(int location, double score){
+        this.moveLocation = location;
+        this.score = score;
+    }
+
 }

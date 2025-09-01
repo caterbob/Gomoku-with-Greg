@@ -128,7 +128,7 @@ public abstract class VirtualBoard {
         return 0;
     }
 
-    protected boolean isMoveValid(int position){
+    public boolean isMoveValid(int position){
         if(position >= 0 && position <= 168 && getCellValue(position) == 0){
             return true;
         }

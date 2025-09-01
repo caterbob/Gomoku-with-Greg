@@ -34,6 +34,10 @@ public class LocationList {
         return size;
     }
 
+    public int getLocationInstances(int location){
+        return locationInstances[location];
+    }
+
     public void clear(){
         Arrays.fill(locationInstances, 0);
         Arrays.fill(locations, -1);

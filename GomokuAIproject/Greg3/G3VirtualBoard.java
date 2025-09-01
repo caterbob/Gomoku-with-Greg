@@ -15,6 +15,7 @@ public class G3VirtualBoard extends VirtualBoard{
     private ArrayList<Integer> moveHistory;
     private LineGroup allLines;
     private ArrayList<Integer> candidateMoves;
+    private long currentHash;   //used for transposition table
 
     public G3VirtualBoard(boolean isOpponentBlack, boolean testSegments){
         super(Board.getInstance(), isOpponentBlack);
@@ -84,11 +85,12 @@ public class G3VirtualBoard extends VirtualBoard{
         });
         allLines.getEvaluation();
         candidateMoves = new ArrayList<Integer>();
+        currentHash = Zobrist.computeHash(this);
     }
 
     public G3VirtualBoard(G3VirtualBoard toCopy){
         super(toCopy);
-        this.moveHistory = toCopy.getMoveHistory();
+        this.moveHistory = new ArrayList<Integer>(toCopy.getMoveHistory());
     }
 
     public void setIsOpponentBlack(boolean isOpponentBlack){
@@ -97,6 +99,10 @@ public class G3VirtualBoard extends VirtualBoard{
 
     public ArrayList<Integer> getMoveHistory(){
         return moveHistory;
+    }
+
+    public long getCurrentHash(){
+        return currentHash;
     }
 
     // overridden to handle padding and use of index 169
@@ -157,21 +163,26 @@ public class G3VirtualBoard extends VirtualBoard{
 
     public boolean placeStone(int location){
         if(location >= 0 && location <= 168 && board[location] == 0){
-            if(isBlackTurn)
-                board[location] = 1;
-            else
-                board[location] = 2;
+            currentHash = Zobrist.updateHash(currentHash, location, 0, isBlackTurn); // undo old
+            int value = (isBlackTurn)? 1: 2;
+            board[location] = value;
             moveHistory.add(location);
             isBlackTurn = !isBlackTurn;
+            currentHash = Zobrist.updateHash(currentHash, location, value, isBlackTurn);    // add new
+            //currentHash = Zobrist.computeHash(this);
             return true;
         }
         return false;
     }
 
     public void undoStone(){
-        board[moveHistory.get(moveHistory.size() - 1)] = 0;
+        int location = moveHistory.get(moveHistory.size() - 1);
+        currentHash = Zobrist.updateHash(currentHash, location, board[location], isBlackTurn);
+        board[location] = 0;
         moveHistory.remove(moveHistory.size() - 1);
         isBlackTurn = !isBlackTurn;
+        currentHash = Zobrist.updateHash(currentHash, location, 0, isBlackTurn);
+        //currentHash = Zobrist.computeHash(this);
     }
 
     public void clearMoveHistory(){

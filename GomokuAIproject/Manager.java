@@ -132,7 +132,6 @@ public class Manager {
                     double engine1Time = 0;
                     double engine2Time = 0;
                     while(!board.isGameOver()){
-                        System.out.println(board.getMoveHistory().size());
                         boolean isEngine1Turn = board.isBlackTurn() == engine2.getIsOpponentBlack();
                         if(isEngine1Turn){
                             Instant startTime = Instant.now();
