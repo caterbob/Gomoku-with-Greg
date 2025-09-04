@@ -16,8 +16,9 @@ public class G3VirtualBoard extends VirtualBoard{
     private LineGroup allLines;
     private ArrayList<Integer> candidateMoves;
     private long currentHash;   //used for transposition table
+    private boolean fix;
 
-    public G3VirtualBoard(boolean isOpponentBlack, boolean testSegments){
+    public G3VirtualBoard(boolean isOpponentBlack, boolean testSegments, boolean fix){
         super(Board.getInstance(), isOpponentBlack);
         moveHistory = new ArrayList<Integer>();
         allLines = new LineGroup(this,
@@ -86,6 +87,7 @@ public class G3VirtualBoard extends VirtualBoard{
         allLines.getEvaluation();
         candidateMoves = new ArrayList<Integer>();
         currentHash = Zobrist.computeHash(this);
+        this.fix = fix;
     }
 
     public G3VirtualBoard(G3VirtualBoard toCopy){
@@ -131,8 +133,8 @@ public class G3VirtualBoard extends VirtualBoard{
                 for(int offset: OffsetConstants.REAL_OFFSETS){
                     if(isMoveValid(i, offset) && !candidateMoves.contains(i + offset))
                         candidateMoves.add(i + offset);
-                    // if(isMoveValid(i + offset, offset) && !moves.contains(i + 2 * offset))
-                    //     moves.add(i + 2 * offset);
+                    if(false && isMoveValid(i + offset, offset) && !candidateMoves.contains(i + 2 * offset))
+                        candidateMoves.add(i + 2 * offset);
                 }
             }
         }
@@ -150,8 +152,8 @@ public class G3VirtualBoard extends VirtualBoard{
         for(int offset: OffsetConstants.REAL_OFFSETS){
             if(isMoveValid(locationOfStone, offset) && !candidateMoves.contains(locationOfStone + offset))
                 candidateMoves.add(locationOfStone + offset);
-            // if(isMoveValid(i + offset, offset) && !moves.contains(i + 2 * offset))
-            //     moves.add(i + 2 * offset);
+            if(false && isMoveValid(locationOfStone + offset, offset) && !candidateMoves.contains(locationOfStone + 2 * offset))
+                candidateMoves.add(locationOfStone + 2 * offset);
         }
         ArrayList<Integer> moves = new ArrayList<Integer>(candidateMoves);
         return moves;
