@@ -17,6 +17,9 @@ public class G3VirtualBoard extends VirtualBoard{
     private ArrayList<Integer> candidateMoves;
     private long currentHash;   //used for transposition table
     private boolean fix;
+    // it's important to know whose turn it was at G3VirtualBoard Instantiation so 
+    // zobrist hash can be correctly updated when removing a stone (goes back to instantiation turn)
+    private boolean initialIsBlackTurn;
 
     public G3VirtualBoard(boolean isOpponentBlack, boolean testSegments, boolean fix){
         super(Board.getInstance(), isOpponentBlack);
@@ -88,6 +91,7 @@ public class G3VirtualBoard extends VirtualBoard{
         candidateMoves = new ArrayList<Integer>();
         currentHash = Zobrist.computeHash(this);
         this.fix = fix;
+        initialIsBlackTurn = isBlackTurn;
     }
 
     public G3VirtualBoard(G3VirtualBoard toCopy){
@@ -123,6 +127,7 @@ public class G3VirtualBoard extends VirtualBoard{
         for(int move: Board.getMoveHistory()){
             moveHistory.add(move);
         }
+        currentHash = Zobrist.computeHash(this);
     }
 
     public ArrayList<Integer> getCandidateMoves(){
@@ -165,7 +170,7 @@ public class G3VirtualBoard extends VirtualBoard{
 
     public boolean placeStone(int location){
         if(location >= 0 && location <= 168 && board[location] == 0){
-            currentHash = Zobrist.updateHash(currentHash, location, 0, isBlackTurn); // undo old
+            currentHash = Zobrist.updateHash(currentHash, location, 0, initialIsBlackTurn); // undo old
             int value = (isBlackTurn)? 1: 2;
             board[location] = value;
             moveHistory.add(location);
@@ -183,7 +188,7 @@ public class G3VirtualBoard extends VirtualBoard{
         board[location] = 0;
         moveHistory.remove(moveHistory.size() - 1);
         isBlackTurn = !isBlackTurn;
-        currentHash = Zobrist.updateHash(currentHash, location, 0, isBlackTurn);
+        currentHash = Zobrist.updateHash(currentHash, location, 0, initialIsBlackTurn);
         //currentHash = Zobrist.computeHash(this);
     }
 
@@ -217,9 +222,39 @@ public class G3VirtualBoard extends VirtualBoard{
         return evaluation;
     }
 
+    //public void resetEvaluation()
+
     // fetches from LineGroup allLines
+    // returns deep copy
     public LocationList[] fetchThreatMapList(){
-        return allLines.getThreatMapList();
+        LocationList[] temp = allLines.getThreatMapList();
+        LocationList black5Threats = new LocationList(); 
+        LocationList blackOpen4Threats = new LocationList();
+        LocationList black4Threats = new LocationList();
+        LocationList black3Threats = new LocationList();
+        LocationList white5Threats = new LocationList();
+        LocationList whiteOpen4Threats = new LocationList();
+        LocationList white4Threats = new LocationList();
+        LocationList white3Threats = new LocationList();
+        black5Threats.combine(temp[G3Constants.FIVE_THREAT_INDEX]);
+        blackOpen4Threats.combine(temp[G3Constants.OPEN_FOUR_THREAT_INDEX]);
+        black4Threats.combine(temp[G3Constants.FOUR_THREAT_INDEX]);
+        black3Threats.combine(temp[G3Constants.THREE_THREAT_INDEX]);
+        white5Threats.combine(temp[G3Constants.FIVE_THREAT_INDEX + 4]);
+        whiteOpen4Threats.combine(temp[G3Constants.OPEN_FOUR_THREAT_INDEX + 4]);
+        white4Threats.combine(temp[G3Constants.FOUR_THREAT_INDEX + 4]);
+        white3Threats.combine(temp[G3Constants.THREE_THREAT_INDEX + 4]);
+        temp = new LocationList[]{
+            black5Threats,
+            blackOpen4Threats,
+            black4Threats,
+            black3Threats,
+            white5Threats,
+            whiteOpen4Threats,
+            white4Threats,
+            white3Threats
+        };
+        return temp;
     }
 
     private boolean isDraw(){

@@ -61,7 +61,7 @@ public class Greg3 implements Engine{
         killerMoves.clear();
         generation = 0;
         //System.out.println("Fix? " + fix + ", Average Depth: " + totalDepth / movesPlayed);
-        System.out.println("Average Nodes Per Second: " + (int)((nodes / movesPlayed) / timeToPlay) + " N/s");
+        System.out.println("Average Nodes Per Second (" + fix + "): "  + (int)((nodes / movesPlayed) / timeToPlay) + " N/s");
     }
 
     public boolean getIsOpponentBlack(){
@@ -165,7 +165,8 @@ public class Greg3 implements Engine{
             throw new TimeoutException();
         }
         // check transposition table first to see minimax can be skipped for this node
-        long hash = Zobrist.computeHash(myVirtualBoard);
+        long hash;
+        hash = myVirtualBoard.getCurrentHash();
         // long recomputedHash = Zobrist.computeHash(myVirtualBoard);
         // if(hash != recomputedHash) {
         //     System.out.println("HASH MISMATCH at start of minimax!");
@@ -254,10 +255,10 @@ public class Greg3 implements Engine{
                 if(newBeta <= newAlpha){ //fail high - found something too good
                     prunes++;
                     int move = bestMove.getMoveLocation();
-                    if(fix && !threatMapList[G3Constants.FIVE_THREAT_INDEX].containsLocation(move)
-                    && !threatMapList[G3Constants.FIVE_THREAT_INDEX + 4].containsLocation(move)){
-                        killerMoves.addKillerMove(move, depth);
-                    }
+                    // if(fix && !threatMapList[G3Constants.FIVE_THREAT_INDEX].containsLocation(move)
+                    // && !threatMapList[G3Constants.FIVE_THREAT_INDEX + 4].containsLocation(move)){
+                    //     killerMoves.addKillerMove(move, depth);
+                    // }
                     table.add(hash, new TTEntry((int)bestMove.getScore(), depth, TTEntry.LOWER_BOUND, bestMove.getMoveLocation(), generation, hash));
                     return bestMove;
                 }
@@ -297,10 +298,10 @@ public class Greg3 implements Engine{
                 if(newBeta <= newAlpha){    // fail high - move too good
                     prunes++;
                     int move = bestMove.getMoveLocation();
-                    if(fix && !threatMapList[G3Constants.FIVE_THREAT_INDEX].containsLocation(move)
-                    && !threatMapList[G3Constants.FIVE_THREAT_INDEX + 4].containsLocation(move)){
-                        killerMoves.addKillerMove(move, depth);
-                    }
+                    // if(fix && !threatMapList[G3Constants.FIVE_THREAT_INDEX].containsLocation(move)
+                    // && !threatMapList[G3Constants.FIVE_THREAT_INDEX + 4].containsLocation(move)){
+                    //     killerMoves.addKillerMove(move, depth);
+                    // }
                     table.add(hash, new TTEntry((int)bestMove.getScore(), depth, TTEntry.UPPER_BOUND, bestMove.getMoveLocation(), generation, hash));
                     return bestMove;
                 }
