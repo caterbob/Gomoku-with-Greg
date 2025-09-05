@@ -57,7 +57,7 @@ public class MainWindow {
         playEngines.addActionListener(new ActionListener(){
             public void actionPerformed(ActionEvent e){
                 boardMenu.add(DisplayBoard.getInstance().getBoardPanel());
-                Manager.runEngineVEngine(new Greg3(true, 1, false, false), new Greg3(false, 1, false, false), 2, true, true);
+                Manager.runEngineVEngine(new Greg3(true, 3, false, false), new Greg3(false, 3, false, true), 30, true, true);
                 transition();
             }
         });

@@ -117,7 +117,7 @@ public class Greg3 implements Engine{
     private void orderMoves(ArrayList<Integer> moves, LocationList[] threatMapList, long hash, int plyFromRoot){
         // lowest priority - three threats, regular four threats
         for(int threatMapIndex = G3Constants.THREE_THREAT_INDEX;
-        threatMapIndex >= G3Constants.OPEN_FOUR_THREAT_INDEX; threatMapIndex--){
+        threatMapIndex >= G3Constants.FOUR_THREAT_INDEX; threatMapIndex--){
             for(int moveIndex = 0; moveIndex < moves.size(); moveIndex++){
                 int move = moves.get(moveIndex);
                 if(threatMapList[threatMapIndex].containsLocation(move) || 
@@ -136,7 +136,7 @@ public class Greg3 implements Engine{
             }
         }
         // next open four threats and five threats
-        for(int threatMapIndex = G3Constants.FIVE_THREAT_INDEX;
+        for(int threatMapIndex = G3Constants.OPEN_FOUR_THREAT_INDEX;
         threatMapIndex >= G3Constants.FIVE_THREAT_INDEX; threatMapIndex--){
             for(int moveIndex = 0; moveIndex < moves.size(); moveIndex++){
                 int move = moves.get(moveIndex);
