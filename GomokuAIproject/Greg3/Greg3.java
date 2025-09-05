@@ -1,8 +1,6 @@
 package GomokuAIproject.Greg3;
 
-import java.sql.Time;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.concurrent.TimeoutException;
 
 import GomokuAIproject.Board;
@@ -34,7 +32,7 @@ public class Greg3 implements Engine{
 
     private static final int SAFETY_MARGIN = 50;
     private static final int UNCERTAINTY_PENALTY = 50;
-    private static final int QUIESCENCE_DEPTH_LIMIT = 4;
+    private static final int QUIESCENCE_DEPTH_LIMIT = 6;
     private static final int DEPTH_LIMIT = 15;
     private static final int KILLER_MOVES_STORED = 3;
 
@@ -78,7 +76,7 @@ public class Greg3 implements Engine{
         myVirtualBoard.getEvaluation();
         //table.clear();
         TThits = 0;
-        //nodes = 0;
+        nodes = 0;
         prunes = 0;
         ArrayList<Integer> moves = myVirtualBoard.getCandidateMoves();
         bestMoveFound = new SuperMove(moves.get(0), 0);
@@ -106,15 +104,37 @@ public class Greg3 implements Engine{
         }
         totalDepth += finalDepth;
         int myMove = bestMoveFound.getMoveLocation();
-        // System.out.println("Nodes: " + nodes);
-        // System.out.println("TTHits: " + TThits);
-        //System.out.println(myMove);
+        // System.out.println("-------------");
+        // System.out.println("Computer Move #: " + movesPlayed);
+        // System.out.println("Nodes Searched: " + nodes);
+        // System.out.println("Depth Reached: " + finalDepth);
+        // System.out.println("Evaluation: " + bestMoveFound.getScore());
         return myMove;
 
     }
 
     // also adds reach moves (gap of 1 if also a threat of some kind)
     private void orderMoves(ArrayList<Integer> moves, LocationList[] threatMapList, long hash, int plyFromRoot){
+        if(fix){
+            for(int threatMapIndex = G3Constants.THREE_THREAT_INDEX;
+            threatMapIndex >= G3Constants.FOUR_THREAT_INDEX; threatMapIndex--){
+                // add black
+                for(int threatIndex = 0; threatIndex < threatMapList[threatMapIndex].getSize(); threatIndex++){
+                    int move = threatMapList[threatMapIndex].getLocation(threatIndex);
+                    if(!moves.contains(move)){
+                        moves.add(move);
+                    }
+                }
+                // add white
+                for(int threatIndex = 0; threatIndex < threatMapList[threatMapIndex + 4].getSize(); threatIndex++){
+                    int move = threatMapList[threatMapIndex + 4].getLocation(threatIndex);
+                    if(!moves.contains(move)){
+                        moves.add(move);
+                    }
+                }
+            }
+        }
+        
         // lowest priority - three threats, regular four threats
         for(int threatMapIndex = G3Constants.THREE_THREAT_INDEX;
         threatMapIndex >= G3Constants.OPEN_FOUR_THREAT_INDEX; threatMapIndex--){
@@ -128,13 +148,13 @@ public class Greg3 implements Engine{
             }
         }
         // next killer moves
-        int[] killerMoveList = killerMoves.getKillers(plyFromRoot);
-        for(int move: killerMoveList){
-            if(moves.contains(move)){
-                moves.remove(Integer.valueOf(move));
-                moves.add(0, move);
-            }
-        }
+        // int[] killerMoveList = killerMoves.getKillers(plyFromRoot);
+        // for(int move: killerMoveList){
+        //     if(moves.contains(move)){
+        //         moves.remove(Integer.valueOf(move));
+        //         moves.add(0, move);
+        //     }
+        // }
         // next open four threats and five threats
         for(int threatMapIndex = G3Constants.FIVE_THREAT_INDEX;
         threatMapIndex >= G3Constants.FIVE_THREAT_INDEX; threatMapIndex--){
@@ -213,7 +233,7 @@ public class Greg3 implements Engine{
                 }
                 else if(thisPositionEval >= G3Constants.GAME_DRAWN){
                     thisPositionEval = 0;
-                }else if(depth == 0 && false){
+                }else if(depth == 0 && fix){
                     thisPositionEval = (int)quiescenceSearch(
                         QUIESCENCE_DEPTH_LIMIT, QUIESCENCE_DEPTH_LIMIT, isMaximizingPlayer, 
                         movePlayed, alpha, beta).getScore();
@@ -254,7 +274,7 @@ public class Greg3 implements Engine{
                 if(newBeta <= newAlpha){ //fail high - found something too good
                     prunes++;
                     int move = bestMove.getMoveLocation();
-                    if(fix && !threatMapList[G3Constants.FIVE_THREAT_INDEX].containsLocation(move)
+                    if(false && !threatMapList[G3Constants.FIVE_THREAT_INDEX].containsLocation(move)
                     && !threatMapList[G3Constants.FIVE_THREAT_INDEX + 4].containsLocation(move)){
                         killerMoves.addKillerMove(move, depth);
                     }
@@ -297,7 +317,7 @@ public class Greg3 implements Engine{
                 if(newBeta <= newAlpha){    // fail high - move too good
                     prunes++;
                     int move = bestMove.getMoveLocation();
-                    if(fix && !threatMapList[G3Constants.FIVE_THREAT_INDEX].containsLocation(move)
+                    if(false && !threatMapList[G3Constants.FIVE_THREAT_INDEX].containsLocation(move)
                     && !threatMapList[G3Constants.FIVE_THREAT_INDEX + 4].containsLocation(move)){
                         killerMoves.addKillerMove(move, depth);
                     }
@@ -451,6 +471,12 @@ public class Greg3 implements Engine{
         }
         // then add 4-threats
         for(int i = G3Constants.FOUR_THREAT_INDEX; i < 7; i += 4){
+            for(int moveIndex = 0; moveIndex < threatMapList[i].getSize(); moveIndex++){
+                qMoves.add(threatMapList[i].getLocation(moveIndex));
+            }
+        }
+        // then add 3-threats
+        for(int i = G3Constants.THREE_THREAT_INDEX; i < 8; i += 4){
             for(int moveIndex = 0; moveIndex < threatMapList[i].getSize(); moveIndex++){
                 qMoves.add(threatMapList[i].getLocation(moveIndex));
             }
