@@ -52,6 +52,11 @@ public class Line {
         }
     }
 
+    public Line(Line toCopy){
+        evaluation = toCopy.getEvaluation();
+        threatList = toCopy.getThreatList();
+    }
+
     // gets current evaluation (without modification)
     public int getEvaluation(){
         return evaluation;
@@ -154,6 +159,36 @@ public class Line {
 
     public LocationList getThreatMap(int threatListIndex){
         return threatList[threatListIndex];
+    }
+
+    public LocationList[] getThreatList(){
+        LocationList newBlack5Threats = new LocationList(); 
+        LocationList newBlackOpen4Threats = new LocationList();
+        LocationList newBlack4Threats = new LocationList();
+        LocationList newBlack3Threats = new LocationList();
+        LocationList newWhite5Threats = new LocationList();
+        LocationList newWhiteOpen4Threats = new LocationList();
+        LocationList newWhite4Threats = new LocationList();
+        LocationList newWhite3Threats = new LocationList();
+        newBlack5Threats.combine(threatList[G3Constants.FIVE_THREAT_INDEX]);
+        newBlackOpen4Threats.combine(threatList[G3Constants.OPEN_FOUR_THREAT_INDEX]);
+        newBlack4Threats.combine(threatList[G3Constants.FOUR_THREAT_INDEX]);
+        newBlack3Threats.combine(threatList[G3Constants.THREE_THREAT_INDEX]);
+        newWhite5Threats.combine(threatList[G3Constants.FIVE_THREAT_INDEX + 4]);
+        newWhiteOpen4Threats.combine(threatList[G3Constants.OPEN_FOUR_THREAT_INDEX + 4]);
+        newWhite4Threats.combine(threatList[G3Constants.FOUR_THREAT_INDEX + 4]);
+        newWhite3Threats.combine(threatList[G3Constants.THREE_THREAT_INDEX + 4]);
+        LocationList[] temp = new LocationList[]{
+            newBlack5Threats,
+            newBlackOpen4Threats,
+            newBlack4Threats,
+            newBlack3Threats,
+            newWhite5Threats,
+            newWhiteOpen4Threats,
+            newWhite4Threats,
+            newWhite3Threats
+        };
+        return temp;
     }
 
     public void clearThreatList(){

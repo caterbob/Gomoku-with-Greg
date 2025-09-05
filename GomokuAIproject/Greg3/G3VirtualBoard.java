@@ -227,34 +227,7 @@ public class G3VirtualBoard extends VirtualBoard{
     // fetches from LineGroup allLines
     // returns deep copy
     public LocationList[] fetchThreatMapList(){
-        LocationList[] temp = allLines.getThreatMapList();
-        LocationList black5Threats = new LocationList(); 
-        LocationList blackOpen4Threats = new LocationList();
-        LocationList black4Threats = new LocationList();
-        LocationList black3Threats = new LocationList();
-        LocationList white5Threats = new LocationList();
-        LocationList whiteOpen4Threats = new LocationList();
-        LocationList white4Threats = new LocationList();
-        LocationList white3Threats = new LocationList();
-        black5Threats.combine(temp[G3Constants.FIVE_THREAT_INDEX]);
-        blackOpen4Threats.combine(temp[G3Constants.OPEN_FOUR_THREAT_INDEX]);
-        black4Threats.combine(temp[G3Constants.FOUR_THREAT_INDEX]);
-        black3Threats.combine(temp[G3Constants.THREE_THREAT_INDEX]);
-        white5Threats.combine(temp[G3Constants.FIVE_THREAT_INDEX + 4]);
-        whiteOpen4Threats.combine(temp[G3Constants.OPEN_FOUR_THREAT_INDEX + 4]);
-        white4Threats.combine(temp[G3Constants.FOUR_THREAT_INDEX + 4]);
-        white3Threats.combine(temp[G3Constants.THREE_THREAT_INDEX + 4]);
-        temp = new LocationList[]{
-            black5Threats,
-            blackOpen4Threats,
-            black4Threats,
-            black3Threats,
-            white5Threats,
-            whiteOpen4Threats,
-            white4Threats,
-            white3Threats
-        };
-        return temp;
+        return allLines.getThreatMapList();
     }
 
     private boolean isDraw(){

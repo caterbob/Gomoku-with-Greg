@@ -19,6 +19,7 @@ public class LineGroup {
     private LocationList black3Threats;
     private LocationList white3Threats;
     private LocationList[] threatMapList;
+    private boolean testSegments;
 
     public LineGroup(VirtualBoard virtualBoard, Line[] lines){
         this.virtualBoard = virtualBoard;
@@ -47,6 +48,118 @@ public class LineGroup {
             white4Threats,
             white3Threats
         };
+    }
+
+    public LineGroup(VirtualBoard virtualBoard, boolean testSegments){
+        this.virtualBoard = virtualBoard;
+        this.testSegments = testSegments;
+        myLines = new Line[]{
+            new Line(virtualBoard, G3Constants.row0, testSegments),
+            new Line(virtualBoard, G3Constants.row1, testSegments),
+            new Line(virtualBoard, G3Constants.row2, testSegments),
+            new Line(virtualBoard, G3Constants.row3, testSegments),
+            new Line(virtualBoard, G3Constants.row4, testSegments),
+            new Line(virtualBoard, G3Constants.row5, testSegments),
+            new Line(virtualBoard, G3Constants.row6, testSegments),
+            new Line(virtualBoard, G3Constants.row7, testSegments),
+            new Line(virtualBoard, G3Constants.row8, testSegments),
+            new Line(virtualBoard, G3Constants.row9, testSegments),
+            new Line(virtualBoard, G3Constants.row10, testSegments),
+            new Line(virtualBoard, G3Constants.row11, testSegments),
+            new Line(virtualBoard, G3Constants.row12, testSegments),
+            new Line(virtualBoard, G3Constants.column0, testSegments),
+            new Line(virtualBoard, G3Constants.column1, testSegments),
+            new Line(virtualBoard, G3Constants.column2, testSegments),
+            new Line(virtualBoard, G3Constants.column3, testSegments),
+            new Line(virtualBoard, G3Constants.column4, testSegments),
+            new Line(virtualBoard, G3Constants.column5, testSegments),
+            new Line(virtualBoard, G3Constants.column6, testSegments),
+            new Line(virtualBoard, G3Constants.column7, testSegments),
+            new Line(virtualBoard, G3Constants.column8, testSegments),
+            new Line(virtualBoard, G3Constants.column9, testSegments),
+            new Line(virtualBoard, G3Constants.column10, testSegments),
+            new Line(virtualBoard, G3Constants.column11, testSegments),
+            new Line(virtualBoard, G3Constants.column12, testSegments),
+            new Line(virtualBoard, G3Constants.forwardDiagonal0, testSegments),
+            new Line(virtualBoard, G3Constants.forwardDiagonal1, testSegments),
+            new Line(virtualBoard, G3Constants.forwardDiagonal2, testSegments),
+            new Line(virtualBoard, G3Constants.forwardDiagonal3, testSegments),
+            new Line(virtualBoard, G3Constants.forwardDiagonal4, testSegments),
+            new Line(virtualBoard, G3Constants.forwardDiagonal5, testSegments),
+            new Line(virtualBoard, G3Constants.forwardDiagonal6, testSegments),
+            new Line(virtualBoard, G3Constants.forwardDiagonal7, testSegments),
+            new Line(virtualBoard, G3Constants.forwardDiagonal8, testSegments),
+            new Line(virtualBoard, G3Constants.forwardDiagonal9, testSegments),
+            new Line(virtualBoard, G3Constants.forwardDiagonal10, testSegments),
+            new Line(virtualBoard, G3Constants.forwardDiagonal11, testSegments),
+            new Line(virtualBoard, G3Constants.forwardDiagonal12, testSegments),
+            new Line(virtualBoard, G3Constants.forwardDiagonal13, testSegments),
+            new Line(virtualBoard, G3Constants.forwardDiagonal14, testSegments),
+            new Line(virtualBoard, G3Constants.forwardDiagonal15, testSegments),
+            new Line(virtualBoard, G3Constants.forwardDiagonal16, testSegments),
+            new Line(virtualBoard, G3Constants.backwardDiagonal0, testSegments),
+            new Line(virtualBoard, G3Constants.backwardDiagonal1, testSegments),
+            new Line(virtualBoard, G3Constants.backwardDiagonal2, testSegments),
+            new Line(virtualBoard, G3Constants.backwardDiagonal3, testSegments),
+            new Line(virtualBoard, G3Constants.backwardDiagonal4, testSegments),
+            new Line(virtualBoard, G3Constants.backwardDiagonal5, testSegments),
+            new Line(virtualBoard, G3Constants.backwardDiagonal6, testSegments),
+            new Line(virtualBoard, G3Constants.backwardDiagonal7, testSegments),
+            new Line(virtualBoard, G3Constants.backwardDiagonal8, testSegments),
+            new Line(virtualBoard, G3Constants.backwardDiagonal9, testSegments),
+            new Line(virtualBoard, G3Constants.backwardDiagonal10, testSegments),
+            new Line(virtualBoard, G3Constants.backwardDiagonal11, testSegments),
+            new Line(virtualBoard, G3Constants.backwardDiagonal12, testSegments),
+            new Line(virtualBoard, G3Constants.backwardDiagonal13, testSegments),
+            new Line(virtualBoard, G3Constants.backwardDiagonal14, testSegments),
+            new Line(virtualBoard, G3Constants.backwardDiagonal15, testSegments),
+            new Line(virtualBoard, G3Constants.backwardDiagonal16, testSegments)
+        };
+        lineEvaluations = new int[myLines.length];
+        for(int i = 0; i < myLines.length; i++){
+            lineEvaluations[i] = myLines[i].getEvaluation();
+        }
+        evaluation = 0;
+
+        black5Threats = new LocationList();
+        white5Threats = new LocationList();
+        blackOpen4Threats = new LocationList();
+        whiteOpen4Threats = new LocationList();
+        black4Threats = new LocationList();
+        white4Threats = new LocationList();
+        black3Threats = new LocationList();
+        white3Threats = new LocationList();
+        threatMapList = new LocationList[]{
+            black5Threats,
+            blackOpen4Threats,
+            black4Threats,
+            black3Threats,
+            white5Threats,
+            whiteOpen4Threats,
+            white4Threats,
+            white3Threats
+        };
+    }
+
+    //returns deep copy of toCopy
+    public LineGroup(LineGroup toCopy){
+        this.virtualBoard = virtualBoard;
+        myLines = new Line[60];
+        for(int i = 0; i < 60; i++){
+            myLines[i] = new Line(toCopy.getLine(i));
+        }
+        threatMapList = toCopy.getThreatMapList();
+        lineEvaluations = toCopy.getLineEvaluations();
+    }
+
+    public boolean getTestSegments(){
+        return testSegments;
+    }
+
+    public int[] getLineEvaluations(){
+        int[] toReturn = new int[60];
+        System.arraycopy(lineEvaluations, 0, toReturn, 0, 60);
+        return toReturn;
     }
 
     // used to initialize if previous board history doesn't exist
@@ -179,8 +292,39 @@ public class LineGroup {
         return threatMapList[index];
     }
 
+    private Line getLine(int index){
+        return myLines[index];
+    }
+
+    // returns deep copy
     public LocationList[] getThreatMapList(){
-        return threatMapList;
+        LocationList newBlack5Threats = new LocationList(); 
+        LocationList newBlackOpen4Threats = new LocationList();
+        LocationList newBlack4Threats = new LocationList();
+        LocationList newBlack3Threats = new LocationList();
+        LocationList newWhite5Threats = new LocationList();
+        LocationList newWhiteOpen4Threats = new LocationList();
+        LocationList newWhite4Threats = new LocationList();
+        LocationList newWhite3Threats = new LocationList();
+        newBlack5Threats.combine(threatMapList[G3Constants.FIVE_THREAT_INDEX]);
+        newBlackOpen4Threats.combine(threatMapList[G3Constants.OPEN_FOUR_THREAT_INDEX]);
+        newBlack4Threats.combine(threatMapList[G3Constants.FOUR_THREAT_INDEX]);
+        newBlack3Threats.combine(threatMapList[G3Constants.THREE_THREAT_INDEX]);
+        newWhite5Threats.combine(threatMapList[G3Constants.FIVE_THREAT_INDEX + 4]);
+        newWhiteOpen4Threats.combine(threatMapList[G3Constants.OPEN_FOUR_THREAT_INDEX + 4]);
+        newWhite4Threats.combine(threatMapList[G3Constants.FOUR_THREAT_INDEX + 4]);
+        newWhite3Threats.combine(threatMapList[G3Constants.THREE_THREAT_INDEX + 4]);
+        LocationList[] temp = new LocationList[]{
+            newBlack5Threats,
+            newBlackOpen4Threats,
+            newBlack4Threats,
+            newBlack3Threats,
+            newWhite5Threats,
+            newWhiteOpen4Threats,
+            newWhite4Threats,
+            newWhite3Threats
+        };
+        return temp;
     }
 
     public void subtractLineThreatMaps(Line line){
