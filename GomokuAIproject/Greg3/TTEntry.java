@@ -15,6 +15,8 @@ public class TTEntry {
     public static final int UPPER_BOUND = 1;
     public static final int LOWER_BOUND = 2;
 
+    public static final int NULL = -1;
+
     public TTEntry(int eval, int depth, int type, int bestMoveFound, int generation, long hash){
         this.eval = eval;
         this.depth = depth;
@@ -24,6 +26,15 @@ public class TTEntry {
         this.hash = hash;
     }
 
+    public TTEntry(){
+        eval = NULL;
+        depth = NULL;
+        type = NULL;
+        bestMoveFound = NULL;
+        generation = NULL;
+        hash = NULL;
+    }
+
     public TTEntry(TTEntry toCopy){
         this.eval = toCopy.getEval();
         this.depth = toCopy.getDepth();
@@ -31,6 +42,11 @@ public class TTEntry {
         this.bestMoveFound = toCopy.getBestMove();
         this.generation = toCopy.getGeneration();
         this.hash = toCopy.getHash();
+    }
+
+    // sort of jank implementation but
+    public boolean isNull(){
+        return (eval == NULL);
     }
 
     public int getEval(){

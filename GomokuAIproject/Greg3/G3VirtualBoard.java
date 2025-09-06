@@ -83,7 +83,7 @@ public class G3VirtualBoard extends VirtualBoard{
             new Line(this, G3Constants.backwardDiagonal14, testSegments),
             new Line(this, G3Constants.backwardDiagonal15, testSegments),
             new Line(this, G3Constants.backwardDiagonal16, testSegments)
-        });
+        }, fix);
         allLines.getEvaluation();
         candidateMoves = new ArrayList<Integer>();
         currentHash = Zobrist.computeHash(this);
@@ -213,6 +213,12 @@ public class G3VirtualBoard extends VirtualBoard{
         if(candidateMoves.size() == 1){ // candidateMoves is from before last move, so now must be 0 (draw)
             evaluation = G3Constants.GAME_DRAWN;
         }
+        
+        if(isBlackTurn){
+            evaluation -= G3Constants.TURN_ADVANTAGE * 0.5;
+        }else{
+            evaluation += G3Constants.TURN_ADVANTAGE * 0.5;
+        } 
 
         return evaluation;
     }

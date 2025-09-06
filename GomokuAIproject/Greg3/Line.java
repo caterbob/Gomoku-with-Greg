@@ -7,6 +7,7 @@ public class Line {
     private VirtualBoard virtualBoard;
     private int evaluation;
     private int[] myCells;
+    private boolean testSegmentScores;
 
     // Threat Maps
     private LocationList black5Threats;
@@ -24,6 +25,7 @@ public class Line {
 
     public Line(VirtualBoard virtualBoard, int[] cells, boolean testSegmentScores){   // pass in virtual board the cells in the line
         this.virtualBoard = virtualBoard;
+        this.testSegmentScores = testSegmentScores;
         evaluation = 0;
         myCells = cells;
         black5Threats = new LocationList();
@@ -45,11 +47,12 @@ public class Line {
             white3Threats
         };
         numberOfSpecial3 = 0;
-        if(testSegmentScores){
-            segmentScoreTableUsed = G3Constants.TEST_SEGMENT_SCORE_TABLE;
-        }else{
-            segmentScoreTableUsed = G3Constants.SEGMENT_SCORE_TABLE;
-        }
+        segmentScoreTableUsed = G3Constants.SEGMENT_SCORE_TABLE;
+        // if(testSegmentScores){
+        //     segmentScoreTableUsed = G3Constants.TEST_SEGMENT_SCORE_TABLE;
+        // }else{
+        //     segmentScoreTableUsed = G3Constants.SEGMENT_SCORE_TABLE;
+        // }
     }
 
     // gets current evaluation (without modification)
@@ -83,10 +86,10 @@ public class Line {
         // evaluate initial mask segments
         if((whiteMask & 0b11111) == 0){
             evaluation -= segmentScoreTableUsed[blackMask & 0b11111];
-            updateThreatMaps(transformSegment(blackMask, whiteMask), 6, true);
+            updateThreatMaps(transformSegment(blackMask, whiteMask), 6, 0); // 0 for black
         }else if((blackMask & 0b11111) == 0){
             evaluation += segmentScoreTableUsed[whiteMask & 0b11111];
-            updateThreatMaps(transformSegment(whiteMask, blackMask), 6, false);
+            updateThreatMaps(transformSegment(whiteMask, blackMask), 6, 4); // 4 for white
         }
 
         // iterate through rest of segments in line
@@ -95,13 +98,12 @@ public class Line {
             whiteMask = updateSegmentMask(whiteMask, virtualBoard.getCellValue(myCells[i]) >> 1);
             if((whiteMask & 0b11111) == 0){ // if first five bits (actual segment) is empty
                 evaluation -= segmentScoreTableUsed[blackMask & 0b11111]; 
-                updateThreatMaps(transformSegment(blackMask, whiteMask), i, true);
+                updateThreatMaps(transformSegment(blackMask, whiteMask), i, 0); // 0 offset used for black
             }else if((blackMask & 0b11111) == 0){
                 evaluation += segmentScoreTableUsed[whiteMask & 0b11111];
-                updateThreatMaps(transformSegment(whiteMask, blackMask), i, false);
+                updateThreatMaps(transformSegment(whiteMask, blackMask), i, 4); // 4 offset used for white
             }
         }
-        
 
         return evaluation;
     }
@@ -124,32 +126,31 @@ public class Line {
     }
 
     // index = looping variable i in evaluateLine()
-    private void updateThreatMaps(int transformedSegment, int index, boolean forBlack){
+    // offset is 4 if for white, 0 if for black
+    private void updateThreatMaps(int transformedSegment, int index, int offset){
         int[] threatTableEntry = G3Constants.SEGMENT_THREAT_TABLE[transformedSegment];
         int threatCode = threatTableEntry[0];
-        int offset = (forBlack)? 0: 4;  // adjusts which index to use in threatList
+        if(threatCode < 1 || threatCode > 3)
+            return;
+
+        LocationList usedThreats;
+        LocationList openFourThreats = threatList[G3Constants.OPEN_FOUR_THREAT_INDEX + offset];
+        LocationList fourThreats = threatList[G3Constants.FOUR_THREAT_INDEX + 4];
 
         if(threatCode == G3Constants.OPEN_FOUR_THREAT_CODE){
-            threatList[G3Constants.OPEN_FOUR_THREAT_INDEX + offset].addLocation(myCells[index + threatTableEntry[1]]);
+            openFourThreats.addLocation(myCells[index + threatTableEntry[1]]);
             if(threatTableEntry[2] != G3Constants.NONEXISTENT_CODE)
-                threatList[G3Constants.OPEN_FOUR_THREAT_INDEX + offset].addLocation(myCells[index + threatTableEntry[2]]);
+                openFourThreats.addLocation(myCells[index + threatTableEntry[2]]);
             for(int i = 3; i < threatTableEntry.length; i++){
-                threatList[G3Constants.FOUR_THREAT_INDEX + offset].addLocation(myCells[index + threatTableEntry[i]]);
+                fourThreats.addLocation(myCells[index + threatTableEntry[i]]);
             }
-        }else if(threatCode == G3Constants.FIVE_THREAT_CODE){
+        }else{
+            usedThreats = threatList[threatCode - 1 + offset];
             for(int i = 1; i < threatTableEntry.length; i++){
-                threatList[G3Constants.FIVE_THREAT_INDEX + offset].addLocation(myCells[index + threatTableEntry[i]]);
+                usedThreats.addLocation(myCells[index + threatTableEntry[i]]);
             }
-        }else if(threatCode == G3Constants.FOUR_THREAT_CODE){
-            for(int i = 1; i < threatTableEntry.length; i++){
-                threatList[G3Constants.FOUR_THREAT_INDEX + offset].addLocation(myCells[index + threatTableEntry[i]]);
-            }
+
         }
-        // else if(threatCode == G3Constants.THREE_THREAT_CODE){
-        //     for(int i = 1; i < threatTableEntry.length; i++){
-        //         threatList[G3Constants.THREE_THREAT_INDEX + offset].addLocation(myCells[index + threatTableEntry[i]]);
-        //     }
-        // }
     }
 
     public LocationList getThreatMap(int threatListIndex){
