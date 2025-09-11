@@ -52,6 +52,10 @@ public class Greg2 implements Engine{
 
     }
 
+    public int playFromPositionHuman(Board board){
+        return playFromPosition(board);
+    }
+
     private void orderMoves(ArrayList<Integer> moves, int[][] evaluationData){
         for(int threatListIndex = 1; threatListIndex < 8; threatListIndex += 2){
             int[] threatList = evaluationData[threatListIndex];

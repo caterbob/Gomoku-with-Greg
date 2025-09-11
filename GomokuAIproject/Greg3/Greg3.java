@@ -17,6 +17,8 @@ public class Greg3 implements Engine{
     private TranspositionTable table;
     private KillerMoveTable killerMoves;
     private double timeToPlay;
+    private double OGtimeToPlay;
+    private double totalTimeLeft;
     private int totalDepth;
 
     // stats
@@ -31,6 +33,7 @@ public class Greg3 implements Engine{
 
     private boolean searchThisMoveFirst;
     private SuperMove bestMoveFound;
+    private ArrayList<Integer> candidateBestMoves;
 
     private static final int SAFETY_MARGIN = 50;
     private static final int UNCERTAINTY_PENALTY = 50;
@@ -45,11 +48,13 @@ public class Greg3 implements Engine{
         table = new TranspositionTable(G3Constants.TTSize);
         killerMoves = new KillerMoveTable(DEPTH_LIMIT, 3);
         this.timeToPlay = timeToPlay;
+        OGtimeToPlay = timeToPlay;
         generation = 0;
         nodes = 0;
         totalDepth = 0;
         movesPlayed = 0;
         this.fix = fix;
+        totalTimeLeft = 295;
     }
 
     public void setIsOpponentBlack(boolean isOpponentBlack){
@@ -69,23 +74,102 @@ public class Greg3 implements Engine{
     }
 
     public int playFromPosition(Board board){
+
+        generation++;
+        movesPlayed++;
+
+        myVirtualBoard.sync();  // syncs to current board state and clears move history
+        myVirtualBoard.getEvaluation();
+
+        TThits = 0;
+        nodes = 0;
+        prunes = 0;
+
+        ArrayList<Integer> moves = myVirtualBoard.getCandidateMoves();
+        bestMoveFound = new SuperMove(moves.get(0), 0);
+        candidateBestMoves = new ArrayList<Integer>();
+        searchThisMoveFirst = false;
+
+        int finalDepth = iterativeSearch(DEPTH_LIMIT, board);
+
+        int myMove;
+        myMove = bestMoveFound.getMoveLocation();
+        System.out.println("--------------");
+        System.out.println("Move Played: " + bestMoveFound.getMoveLocation());
+        System.out.println("Evaluation: " + bestMoveFound.getScore());
+        System.out.println("Positions searched: " + nodes);
+        System.out.println("Depth reached: " + (finalDepth));
+        
+
+        return myMove;
+
+    }
+
+    // plays in a human-like manner
+    boolean foundWin;
+    boolean previouslyFoundWin;
+    double timeTakenThisTurn = 0;
+    boolean playedForcingMove = false;
+    public int playFromPositionHuman(Board board){
         // if(!play){
         //     return -1;
         // }
+        if(generation == 0){
+            foundWin = false;
+            previouslyFoundWin = false;
+        }
+        foundWin = false;
         generation++;
         movesPlayed++;
         myVirtualBoard.sync();  // syncs to current board state and clears move history
-        myVirtualBoard.getEvaluation();
+        int evaluation = myVirtualBoard.getEvaluation();
+        if(bestMoveFound != null){
+            evaluation = (int)bestMoveFound.getScore();
+        }
         //table.clear();
         TThits = 0;
-        //nodes = 0;
+        nodes = 0;
         prunes = 0;
         ArrayList<Integer> moves = myVirtualBoard.getCandidateMoves();
+        LocationList[] threatMapList = myVirtualBoard.fetchThreatMapList();
         bestMoveFound = new SuperMove(moves.get(0), 0);
+        SuperMove lastBestMove = new SuperMove(-1, -1);
         searchThisMoveFirst = false;
         // bring old killer moves one ply closer to root for new iteration
         killerMoves.shiftBackward();
         startTime = System.nanoTime();
+
+        // determine how much time to spend
+        int offset = (isOpponentBlack)? 0: 4;
+        int offset2 = (isOpponentBlack)? 4: 0;
+        boolean beingForced = threatMapList[G3Constants.FIVE_THREAT_INDEX + offset].getSize() > 0;
+        if(beingForced){
+            timeToPlay = 0.5;
+        }else{
+            timeToPlay = (moves.size() / 40.0) * OGtimeToPlay * (1 + Math.random() * 0.4 - 0.2);
+            if(myVirtualBoard.getMoveHistory().size() < 4){
+                timeToPlay *= 0.1;
+            }
+        }
+        int mySign = (isOpponentBlack)? 1: -1;
+        if(Math.abs(evaluation) < 100){
+            System.out.println("neutral");
+            timeToPlay *= 1;
+        }else if(evaluation * mySign >= 150){
+            System.out.println("winning");
+            timeToPlay *= 0.8;
+        }else if(evaluation * mySign <= -110){
+            System.out.println("losing");
+            timeToPlay *= 1.3;
+        }
+        totalTimeLeft -= timeTakenThisTurn;
+        double timeTaken = 300 - totalTimeLeft;
+        double timeManagementConstant = (1/2.9)*Math.log(-(timeTaken/100.0)+3.1)+0.6;
+        timeManagementConstant = Math.max(timeManagementConstant, 0.05);
+        System.out.println("Time Management Multiplier: " + timeManagementConstant);
+        timeToPlay *= timeManagementConstant;
+        timeToPlay = Math.min(timeToPlay, 18);
+
         int finalDepth = 1;
         for (int depth = 1; depth <= DEPTH_LIMIT; depth++) {
             try {
@@ -93,30 +177,82 @@ public class Greg3 implements Engine{
                     generation, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY);
                 searchThisMoveFirst = true;
             } catch (TimeoutException e) {
-                //System.out.println("Depth reached (partial): " + (depth));
-                //System.out.println("Evaluation: " + bestMoveFound.getScore());
-                //System.out.println("Positions searched: " + nodes);
                 //System.out.println("Fix?: " + fix + ", Total Depth " + totalDepth);
                 break; // fallback to last bestMove
             }
             finalDepth = depth;
-            if(depth == DEPTH_LIMIT){
-                //System.out.println("Fix?: " + fix + ", Total Depth " + totalDepth);
+            if(bestMoveFound.getScore() * mySign >= 90000){
+                foundWin = true;
+                if(!previouslyFoundWin){
+                    try{
+                        double timeLeftThisTurn = (18 - (System.nanoTime() - startTime) / 1000000000.0)*1000;
+                        double timeToWait = Math.min(
+                            Math.min(3000 + 2000 * finalDepth, Math.max((long)timeLeftThisTurn, 0)),
+                            totalTimeLeft * 300);
+                        if(bestMoveFound.getScore() * mySign > 0 && !beingForced){
+                            Thread.sleep((long)timeToWait);
+                        }
+                    }catch(Exception e){}
+                }
+                break;
             }
+            if(lastBestMove.getMoveLocation() == bestMoveFound.getMoveLocation()){
+                timeToPlay *= 0.92;
+            }
+            lastBestMove.set(bestMoveFound.getMoveLocation(), -1);
         }
+        previouslyFoundWin = foundWin;
+        System.out.println("--------------");
+        System.out.println("Move Played: " + bestMoveFound.getMoveLocation());
+        System.out.println("Evaluation: " + bestMoveFound.getScore());
+        System.out.println("Positions searched: " + nodes);
+        System.out.println("Depth reached: " + (finalDepth));
         totalDepth += finalDepth;
         int myMove = bestMoveFound.getMoveLocation();
         // System.out.println("Nodes: " + nodes);
         // System.out.println("TTHits: " + TThits);
         //System.out.println(myMove);
+        timeTakenThisTurn = ((System.nanoTime() - startTime)/1000000000.0) + 2;
         return myMove;
+    }
 
+    // changes the global variable bestMoveFound
+    // returns final depth reached
+    public int iterativeSearch(int depthLimit, Board board){
+        startTime = System.nanoTime();  // set global variable startTime to track time usage
+        int finalDepth = 0;
+        for (int depth = 1; depth <= depthLimit; depth++) {
+            try{
+                bestMoveFound = minimax(depth, depth, isOpponentBlack, board.getLastMove(),
+                    generation, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY);
+                searchThisMoveFirst = true;
+            }catch (TimeoutException e) {
+                break;
+            }
+            finalDepth = depth;
+        }
+        return finalDepth;
     }
 
     // also adds reach moves (gap of 1 if also a threat of some kind)
     private void orderMoves(ArrayList<Integer> moves, LocationList[] threatMapList, long hash, int plyFromRoot){
+        LocationList fourThreats = threatMapList[G3Constants.FOUR_THREAT_INDEX];
+            for(int fourThreatIndex = 0; fourThreatIndex < fourThreats.getSize(); fourThreatIndex++){
+                int move = fourThreats.getLocation(fourThreatIndex);
+                if((true || fourThreats.getLocationInstances(move) > 1) && !moves.contains(move)){
+                    moves.add(move);
+                }
+            }
+            fourThreats = threatMapList[G3Constants.FOUR_THREAT_INDEX + 4];
+            for(int fourThreatIndex = 0; fourThreatIndex < fourThreats.getSize(); fourThreatIndex++){
+                int move = fourThreats.getLocation(fourThreatIndex);
+                if((true || fourThreats.getLocationInstances(move) > 1) && !moves.contains(move)){
+                    moves.add(move);
+                }
+            }
+    
         // lowest priority - three threats, regular four threats
-        for(int threatMapIndex = G3Constants.THREE_THREAT_INDEX;
+        for(int threatMapIndex = G3Constants.FOUR_THREAT_INDEX;
         threatMapIndex >= G3Constants.FOUR_THREAT_INDEX; threatMapIndex--){
             for(int moveIndex = 0; moveIndex < moves.size(); moveIndex++){
                 int move = moves.get(moveIndex);
@@ -128,13 +264,13 @@ public class Greg3 implements Engine{
             }
         }
         // next killer moves
-        int[] killerMoveList = killerMoves.getKillers(plyFromRoot);
-        for(int move: killerMoveList){
-            if(moves.contains(move)){
-                moves.remove(Integer.valueOf(move));
-                moves.add(0, move);
-            }
-        }
+        // int[] killerMoveList = killerMoves.getKillers(plyFromRoot);
+        // for(int move: killerMoveList){
+        //     if(moves.contains(move)){
+        //         moves.remove(Integer.valueOf(move));
+        //         moves.add(0, move);
+        //     }
+        // }
         // next open four threats and five threats
         for(int threatMapIndex = G3Constants.OPEN_FOUR_THREAT_INDEX;
         threatMapIndex >= G3Constants.FIVE_THREAT_INDEX; threatMapIndex--){
@@ -226,13 +362,18 @@ public class Greg3 implements Engine{
 
         ArrayList<Integer> moves = myVirtualBoard.updateCandidateMoves(movePlayed);
         LocationList[] threatMapList = myVirtualBoard.fetchThreatMapList();
+        boolean testCondition;
         int plyFromRoot = originalDepth - depth;
         if(isMaximizingPlayer){
             SuperMove bestMove = new SuperMove(-1, Double.NEGATIVE_INFINITY);
             orderMoves(moves, threatMapList, hash, plyFromRoot);
             if(searchThisMoveFirst && depth == originalDepth){
-                moves.remove(Integer.valueOf(bestMoveFound.getMoveLocation()));
-                moves.add(0, bestMoveFound.getMoveLocation());
+                TTEntry entry = table.get(hash);
+                testCondition = (entry == null || entry.getDepth() < originalDepth);
+                if(testCondition){
+                    moves.remove(Integer.valueOf(bestMoveFound.getMoveLocation()));
+                    moves.add(0, bestMoveFound.getMoveLocation());
+                }
             }
             double newestScore;
             double newAlpha = alpha;
@@ -254,7 +395,7 @@ public class Greg3 implements Engine{
                 if(newBeta <= newAlpha){ //fail high - found something too good
                     prunes++;
                     int move = bestMove.getMoveLocation();
-                    if(fix && !threatMapList[G3Constants.FIVE_THREAT_INDEX].containsLocation(move)
+                    if(false && !threatMapList[G3Constants.FIVE_THREAT_INDEX].containsLocation(move)
                     && !threatMapList[G3Constants.FIVE_THREAT_INDEX + 4].containsLocation(move)){
                         killerMoves.addKillerMove(move, depth);
                     }
@@ -274,8 +415,12 @@ public class Greg3 implements Engine{
             SuperMove bestMove = new SuperMove(-1, Double.POSITIVE_INFINITY);
             orderMoves(moves, threatMapList, hash, plyFromRoot);
             if(searchThisMoveFirst && depth == originalDepth){
-                moves.remove(Integer.valueOf(bestMoveFound.getMoveLocation()));
-                moves.add(0, bestMoveFound.getMoveLocation());
+                TTEntry entry = table.get(hash);
+                testCondition = (entry == null || entry.getDepth() < originalDepth);
+                if(testCondition){
+                    moves.remove(Integer.valueOf(bestMoveFound.getMoveLocation()));
+                    moves.add(0, bestMoveFound.getMoveLocation());
+                }
             }
             double newestScore;
             double newAlpha = alpha;
@@ -297,7 +442,7 @@ public class Greg3 implements Engine{
                 if(newBeta <= newAlpha){    // fail high - move too good
                     prunes++;
                     int move = bestMove.getMoveLocation();
-                    if(fix && !threatMapList[G3Constants.FIVE_THREAT_INDEX].containsLocation(move)
+                    if(false && !threatMapList[G3Constants.FIVE_THREAT_INDEX].containsLocation(move)
                     && !threatMapList[G3Constants.FIVE_THREAT_INDEX + 4].containsLocation(move)){
                         killerMoves.addKillerMove(move, depth);
                     }

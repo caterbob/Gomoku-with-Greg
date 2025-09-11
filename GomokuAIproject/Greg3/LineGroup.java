@@ -19,8 +19,10 @@ public class LineGroup {
     private LocationList black3Threats;
     private LocationList white3Threats;
     private LocationList[] threatMapList;
+    private boolean fix;
 
-    public LineGroup(VirtualBoard virtualBoard, Line[] lines){
+    public LineGroup(VirtualBoard virtualBoard, Line[] lines, boolean fix){
+        this.fix = fix;
         this.virtualBoard = virtualBoard;
         myLines = lines;
         lineEvaluations = new int[myLines.length];
@@ -143,17 +145,17 @@ public class LineGroup {
         if(white5Threats.getSize() >= 2){
             return G3Constants.GAME_WILL_BE_OVER;
         }
-        if(virtualBoard.isBlackTurn() && blackOpen4Threats.getSize() > 0 && white5Threats.getSize() == 0){
+        if(virtualBoard.isBlackTurn() && (blackOpen4Threats.getSize() > 0 || isFourFork(true)) && white5Threats.getSize() == 0){
             return -G3Constants.GAME_WILL_BE_OVER;
         }
-        if(!virtualBoard.isBlackTurn() && whiteOpen4Threats.getSize() > 0 && black5Threats.getSize() == 0){
+        if(!virtualBoard.isBlackTurn() && (whiteOpen4Threats.getSize() > 0 || isFourFork(false)) && black5Threats.getSize() == 0){
             return G3Constants.GAME_WILL_BE_OVER;
         }
-        if(!virtualBoard.isBlackTurn() && blackOpen4Threats.getSize() > 0 && black5Threats.getSize() > 0
+        if(!virtualBoard.isBlackTurn() && (blackOpen4Threats.getSize() > 0 || isFourFork(true)) && black5Threats.getSize() > 0
         && !black4Threats.hasOverlap(black5Threats) && !white4Threats.hasOverlap(black5Threats)){  // should technically be black4Threats for first overlap check
             return -G3Constants.GAME_WILL_BE_OVER;
         }
-        if(virtualBoard.isBlackTurn() && whiteOpen4Threats.getSize() > 0 && white5Threats.getSize() > 0
+        if(virtualBoard.isBlackTurn() && (whiteOpen4Threats.getSize() > 0 || isFourFork(false)) && white5Threats.getSize() > 0
         && !white4Threats.hasOverlap(white5Threats) && !black4Threats.hasOverlap(white5Threats)){  // should technically be black4Threats for first overlap check
             return G3Constants.GAME_WILL_BE_OVER;
         }
@@ -199,5 +201,14 @@ public class LineGroup {
         for(LocationList threatMap: threatMapList){
             threatMap.clear();
         }
+    }
+
+    private boolean isFourFork(boolean forBlack){
+        // if(!fix){
+        //     return false;
+        // }
+        int offset = (forBlack)? 0 : 4;
+        LocationList fourThreats = threatMapList[G3Constants.FOUR_THREAT_INDEX + offset];
+        return fourThreats.containsDouble();
     }
 }

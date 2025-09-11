@@ -7,6 +7,7 @@ public class Line {
     private VirtualBoard virtualBoard;
     private int evaluation;
     private int[] myCells;
+    private boolean fix;
 
     // Threat Maps
     private LocationList black5Threats;
@@ -45,11 +46,12 @@ public class Line {
             white3Threats
         };
         numberOfSpecial3 = 0;
-        if(testSegmentScores){
-            segmentScoreTableUsed = G3Constants.TEST_SEGMENT_SCORE_TABLE;
-        }else{
+        // if(testSegmentScores){
+        //     segmentScoreTableUsed = G3Constants.TEST_SEGMENT_SCORE_TABLE;
+        // }else{
             segmentScoreTableUsed = G3Constants.SEGMENT_SCORE_TABLE;
-        }
+        //}
+        fix = testSegmentScores;
     }
 
     // gets current evaluation (without modification)
@@ -145,7 +147,7 @@ public class Line {
                 threatList[G3Constants.FOUR_THREAT_INDEX + offset].addLocation(myCells[index + threatTableEntry[i]]);
             }
         }
-        // else if(threatCode == G3Constants.THREE_THREAT_CODE){
+        // else if(fix && threatCode == G3Constants.THREE_THREAT_CODE){
         //     for(int i = 1; i < threatTableEntry.length; i++){
         //         threatList[G3Constants.THREE_THREAT_INDEX + offset].addLocation(myCells[index + threatTableEntry[i]]);
         //     }

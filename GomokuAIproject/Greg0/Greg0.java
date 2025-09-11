@@ -31,4 +31,8 @@ public class Greg0 implements Engine{
         return myMove;
     }
 
+    public int playFromPositionHuman(Board board){
+        return playFromPosition(board);
+    }
+
 }

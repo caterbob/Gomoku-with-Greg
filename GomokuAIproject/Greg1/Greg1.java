@@ -45,6 +45,10 @@ public class Greg1 implements Engine{
         return myMove;
     }
 
+    public int playFromPositionHuman(Board board){
+        return playFromPosition(board);
+    }
+
     public SuperMove minimax(int depth, boolean isMaximizingPlayer){
 
         double thisPositionEval = myVirtualBoard.getEvaluation();

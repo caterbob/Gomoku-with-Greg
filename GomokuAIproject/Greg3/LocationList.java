@@ -83,4 +83,12 @@ public class LocationList {
         return false;
     }
 
+    public boolean containsDouble(){
+        for(int i = 0; i < size; i++){
+            if(locationInstances[getLocation(i)] >= 2)
+                return true;
+        }
+        return false;
+    }
+
 }
