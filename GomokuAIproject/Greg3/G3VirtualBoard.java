@@ -218,7 +218,7 @@ public class G3VirtualBoard extends VirtualBoard{
         }else{
             evaluation += G3Constants.TURN_ADVANTAGE * 0.5;
         }
-        if(fix && Math.abs(evaluation) < 500){
+        if(Math.abs(evaluation) < 500){
             evaluation += (int)(Math.random() * 7) - 3;
         }
         return evaluation;
