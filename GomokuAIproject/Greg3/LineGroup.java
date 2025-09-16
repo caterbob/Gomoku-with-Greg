@@ -204,9 +204,6 @@ public class LineGroup {
     }
 
     private boolean isFourFork(boolean forBlack){
-        // if(!fix){
-        //     return false;
-        // }
         int offset = (forBlack)? 0 : 4;
         LocationList fourThreats = threatMapList[G3Constants.FOUR_THREAT_INDEX + offset];
         return fourThreats.containsDouble();

@@ -43,21 +43,21 @@ public class MainWindow {
         blackPlay.addActionListener(new ActionListener(){
             public void actionPerformed(ActionEvent e){
                 boardMenu.add(DisplayBoard.getInstance().getBoardPanel());
-                Manager.runPlayerVEngine(new Greg3(true, 7, false, true), true);
+                Manager.runPlayerVEngine(new Greg3(true, 7, false, false), true);
                 transition();
             }
         });
         whitePlay.addActionListener(new ActionListener(){
             public void actionPerformed(ActionEvent e){
                 boardMenu.add(DisplayBoard.getInstance().getBoardPanel());
-                Manager.runPlayerVEngine(new Greg3(false, 7, false, true), false);
+                Manager.runPlayerVEngine(new Greg3(false, 7, false, false), false);
                 transition();
             }
         });
         playEngines.addActionListener(new ActionListener(){
             public void actionPerformed(ActionEvent e){
                 boardMenu.add(DisplayBoard.getInstance().getBoardPanel());
-                Manager.runEngineVEngine(new Greg3(true, 7, false, true), new Greg2(false, 5), 100, true, true);
+                Manager.runEngineVEngine(new Greg3(true, 0.6, false, false), new Greg2(false, 5), 20, true, true);
                 transition();
             }
         });

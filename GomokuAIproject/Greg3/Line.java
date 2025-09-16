@@ -147,11 +147,11 @@ public class Line {
                 threatList[G3Constants.FOUR_THREAT_INDEX + offset].addLocation(myCells[index + threatTableEntry[i]]);
             }
         }
-        // else if(fix && threatCode == G3Constants.THREE_THREAT_CODE){
-        //     for(int i = 1; i < threatTableEntry.length; i++){
-        //         threatList[G3Constants.THREE_THREAT_INDEX + offset].addLocation(myCells[index + threatTableEntry[i]]);
-        //     }
-        // }
+        else if(threatCode == G3Constants.THREE_THREAT_CODE){
+            for(int i = 1; i < threatTableEntry.length; i++){
+                threatList[G3Constants.THREE_THREAT_INDEX + offset].addLocation(myCells[index + threatTableEntry[i]]);
+            }
+        }
     }
 
     public LocationList getThreatMap(int threatListIndex){
