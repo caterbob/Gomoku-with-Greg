@@ -34,6 +34,7 @@ public class Greg3 implements Engine{
     private int prunes;
     private double movesPlayed;
     private int leafNodes;
+    private int totalNodes;
 
     private int generation;
     private boolean fix;
@@ -75,6 +76,7 @@ public class Greg3 implements Engine{
         totalTimeLeft = 295;
         EFBtotal = 0;
         totalGenerations = 0;
+        totalNodes = 0;
     }
 
     public void setIsOpponentBlack(boolean isOpponentBlack){
@@ -122,29 +124,30 @@ public class Greg3 implements Engine{
 
         int myMove;
         myMove = bestMoveFound.getMoveLocation();
-        System.out.println("--------------");
-        System.out.println("Move Played: " + bestMoveFound.getMoveLocation());
-        System.out.println("Depth reached: " + (finalDepth));
-        //System.out.println("Evaluation: " + bestMoveFound.getScore());
-        System.out.println("Positions searched: " + ((int)(nodes / 10000)/100.0) + "M");
-        int evaluation = (int)bestMoveFound.getScore();
-        int mySign = (isOpponentBlack)? 1: -1;
-        evaluation *= mySign;
-        if(evaluation <= -90000){
-            System.out.println("I'm dead");
-        }else if(evaluation <= -220){
-            System.out.println("Strongly unfavorable");
-        }else if(evaluation < -120){
-            System.out.println("Unfavorable");
-        }else if(evaluation <= 120){
-            System.out.println("Neutral");
-        }else if(evaluation < 220){
-            System.out.println("Favorable");
-        }else if(evaluation < 90000){
-            System.out.println("Strongly favorable");
-        }else{
-            System.out.println("You're dead");
-        }
+        //totalNodes += (nodes / 1000000.0);
+        // System.out.println("--------------");
+        // System.out.println("Move Played: " + bestMoveFound.getMoveLocation());
+        // System.out.println("Depth reached: " + (finalDepth));
+        // //System.out.println("Evaluation: " + bestMoveFound.getScore());
+        // System.out.println("Positions searched: " + ((int)(nodes / 10000)/100.0) + "M");
+        // int evaluation = (int)bestMoveFound.getScore();
+        // int mySign = (isOpponentBlack)? 1: -1;
+        // evaluation *= mySign;
+        // if(evaluation <= -90000){
+        //     System.out.println("I'm dead");
+        // }else if(evaluation <= -220){
+        //     System.out.println("Strongly unfavorable");
+        // }else if(evaluation < -120){
+        //     System.out.println("Unfavorable");
+        // }else if(evaluation <= 120){
+        //     System.out.println("Neutral");
+        // }else if(evaluation < 220){
+        //     System.out.println("Favorable");
+        // }else if(evaluation < 90000){
+        //     System.out.println("Strongly favorable");
+        // }else{
+        //     System.out.println("You're dead");
+        // }
         // lastEval = currentEval;
         // currentEval = (int)bestMoveFound.getScore() * mySign;
         // if(lastEval > 90000 && currentEval < 90000){
@@ -257,11 +260,11 @@ public class Greg3 implements Engine{
             lastBestMove.set(bestMoveFound.getMoveLocation(), -1);
         }
         previouslyFoundWin = foundWin;
-        System.out.println("--------------");
-        System.out.println("Move Played: " + bestMoveFound.getMoveLocation());
-        System.out.println("Evaluation: " + bestMoveFound.getScore());
-        System.out.println("Positions searched: " + nodes);
-        System.out.println("Depth reached: " + (finalDepth));
+        // System.out.println("--------------");
+        // System.out.println("Move Played: " + bestMoveFound.getMoveLocation());
+        // System.out.println("Evaluation: " + bestMoveFound.getScore());
+        // System.out.println("Positions searched: " + nodes);
+        // System.out.println("Depth reached: " + (finalDepth));
         totalDepth += finalDepth;
         int myMove = bestMoveFound.getMoveLocation();
         // System.out.println("Nodes: " + nodes);
@@ -296,7 +299,7 @@ public class Greg3 implements Engine{
         }
         EFB = Math.pow(EFB, 1.0/finalDepth);
         EFBtotal += EFB;
-        System.out.println("Fix? " + fix + " EFB avg: " + EFBtotal / totalGenerations);
+        //System.out.println("Fix? " + fix + " EFB avg: " + EFBtotal / totalGenerations);
         return finalDepth;
     }
 
