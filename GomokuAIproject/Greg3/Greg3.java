@@ -363,10 +363,10 @@ public class Greg3 implements Engine{
                 dependentTable[move] += 120;
             }
             if(threatMapList[G3Constants.FIVE_THREAT_INDEX].containsLocation(move)){
-                dependentTable[move] += 10000;
+                dependentTable[move] += 1000000;
             }
             if(threatMapList[G3Constants.FIVE_THREAT_INDEX + 4].containsLocation(move)){
-                dependentTable[move] += 10000;
+                dependentTable[move] += 1000000;
             }
         }
         Collections.sort(moves, dependentCompare);
