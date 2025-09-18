@@ -228,8 +228,8 @@ public class Greg3 implements Engine{
         int finalDepth = 1;
         for (int depth = 1; depth <= DEPTH_LIMIT; depth++) {
             try {
-                bestMoveFound = minimax(depth, depth, isOpponentBlack, board.getLastMove(),
-                    generation, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY);
+                bestMoveFound = minimax(depth, isOpponentBlack, board.getLastMove(),
+                    generation);
                 searchThisMoveFirst = true;
             } catch (TimeoutException e) {
                 //System.out.println("Fix?: " + fix + ", Total Depth " + totalDepth);
@@ -281,8 +281,8 @@ public class Greg3 implements Engine{
         int finalDepth = 0;
         for (int depth = 1; depth <= depthLimit; depth++) {
             try{
-                bestMoveFound = minimax(depth, depth, isOpponentBlack, board.getLastMove(),
-                    generation, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY);
+                bestMoveFound = minimax(depth, isOpponentBlack, board.getLastMove(),
+                    generation);
                 searchThisMoveFirst = true;
             }catch (TimeoutException e) {
                 break;
@@ -301,8 +301,7 @@ public class Greg3 implements Engine{
     }
 
     // also adds reach moves (gap of 1 if also a threat of some kind)
-    private void orderMoves(ArrayList<Integer> moves, LocationList[] threatMapList, long hash, int plyFromRoot,
-        boolean forBlack){
+    private void orderMoves(ArrayList<Integer> moves, LocationList[] threatMapList, long hash, int plyFromRoot){
 
         Arrays.fill(dependentTable, 0);
 
@@ -382,20 +381,156 @@ public class Greg3 implements Engine{
         }
     }
 
-    public SuperMove minimax(int originalDepth, int depth, boolean isMaximizingPlayer, int movePlayed,
-     int generation, double alpha, double beta) throws TimeoutException{
+   // intended for root
+    public SuperMove minimax(int depth, boolean isMaximizingPlayer,
+     int movePlayed, int generation) throws TimeoutException{
+        double alpha = Double.NEGATIVE_INFINITY;
+        double beta = Double.POSITIVE_INFINITY;
         nodes++;
-        if((nodes % 100) == 0 && System.nanoTime() - startTime >= timeToPlay * 1000000000){
+        if((nodes % 1000) == 0 && System.nanoTime() - startTime >= timeToPlay * 1000000000){
             throw new TimeoutException();
         }
         // check transposition table first to see minimax can be skipped for this node
-        long hash = Zobrist.computeHash(myVirtualBoard);
-        // long recomputedHash = Zobrist.computeHash(myVirtualBoard);
-        // if(hash != recomputedHash) {
-        //     System.out.println("HASH MISMATCH at start of minimax!");
-        //     System.out.println("Maintained: " + hash);
-        //     System.out.println("Recomputed: " + recomputedHash);
-        // }
+        long hash = myVirtualBoard.getCurrentHash();
+       
+        TTEntry currentEntry = table.get(hash);
+        if(currentEntry != null){
+            int tableMove = currentEntry.getBestMove();
+            if(currentEntry.getDepth() >= depth){
+                TThits++;
+                switch(currentEntry.getType()){
+                    case TTEntry.LOWER_BOUND:
+                        alpha = Math.max(alpha, currentEntry.getEval());
+                        break;
+                    case TTEntry.UPPER_BOUND:
+                        beta = Math.min(beta, currentEntry.getEval());
+                        break;
+                }
+            }
+        }
+
+        int thisPositionEval = myVirtualBoard.updateEvaluation(movePlayed);
+
+        ArrayList<Integer> moves = myVirtualBoard.updateCandidateMoves(movePlayed);
+        LocationList[] threatMapList = myVirtualBoard.fetchThreatMapList();
+        boolean testCondition;
+        int plyFromRoot = 0;
+        int moveEnd = moves.size();
+        // Pattern-based move trimming
+        if((threatMapList[G3Constants.FIVE_THREAT_INDEX].getSize() > 0 ||
+         threatMapList[G3Constants.FIVE_THREAT_INDEX + 4].getSize() > 0)){
+            moveEnd = threatMapList[G3Constants.FIVE_THREAT_INDEX].getSize()
+                + threatMapList[G3Constants.FIVE_THREAT_INDEX + 4].getSize() + 1;
+        }else if((threatMapList[G3Constants.OPEN_FOUR_THREAT_INDEX].getSize() > 0
+        || threatMapList[G3Constants.OPEN_FOUR_THREAT_INDEX + 4].getSize() > 0)){
+            moveEnd = threatMapList[G3Constants.FOUR_THREAT_INDEX].getSize() 
+                + threatMapList[G3Constants.FOUR_THREAT_INDEX  + 4].getSize() + 1;
+        }
+        moveEnd = Math.min(moveEnd, moves.size());
+        if(isMaximizingPlayer){
+            SuperMove bestMove = new SuperMove(-1, Double.NEGATIVE_INFINITY);
+            orderMoves(moves, threatMapList, hash, plyFromRoot);
+            if(searchThisMoveFirst){
+                TTEntry entry = table.get(hash);
+                testCondition = (entry == null || entry.getDepth() < depth);
+                if(testCondition){
+                    moves.remove(Integer.valueOf(bestMoveFound.getMoveLocation()));
+                    moves.add(0, bestMoveFound.getMoveLocation());
+                }
+            }
+            double newestScore;
+            double newAlpha = alpha;
+            double newBeta = beta;
+            for(int moveIndex = 0; moveIndex < moves.size(); moveIndex++){
+                myVirtualBoard.placeStone(moves.get(moveIndex));
+                newestScore = (int)minimax(depth, depth - 1, !isMaximizingPlayer, moves.get(moveIndex),
+                 generation, newAlpha, newBeta);
+                myVirtualBoard.undoStone();
+                myVirtualBoard.setCandidateMoves(moves);
+                myVirtualBoard.updateEvaluation(moves.get(moveIndex));
+                if(newestScore > bestMove.getScore()){
+                    bestMove.set(moves.get(moveIndex), newestScore);
+                    bestMoveFound = bestMove;
+                }
+                if(bestMove.getScore() > newAlpha)
+                    newAlpha = bestMove.getScore();
+                if(newBeta <= newAlpha){ //fail high - found something too good
+                    prunes++;
+                    int move = bestMove.getMoveLocation();
+                    // if(fix && !threatMapList[G3Constants.FIVE_THREAT_INDEX].containsLocation(move)
+                    // && !threatMapList[G3Constants.FIVE_THREAT_INDEX + 4].containsLocation(move)){
+                    //     killerMoves.addKillerMove(move, depth);
+                    // }
+                    table.add(hash, new TTEntry((int)bestMove.getScore(), depth, TTEntry.LOWER_BOUND, bestMove.getMoveLocation(), generation, hash));
+                    return bestMove;
+                }
+            }
+            if(bestMove.getScore() <= alpha){   // fail low - didn't find something better
+                table.add(hash, new TTEntry((int)bestMove.getScore(), depth, TTEntry.UPPER_BOUND, bestMove.getMoveLocation(), generation, hash));
+            }else{
+                table.add(hash, new TTEntry((int)bestMove.getScore(), depth, TTEntry.EXACT, bestMove.getMoveLocation(), generation, hash));
+            }
+            return bestMove;
+        }
+
+        else{   // Minimizing Player
+            SuperMove bestMove = new SuperMove(-1, Double.POSITIVE_INFINITY);
+            orderMoves(moves, threatMapList, hash, plyFromRoot);
+            if(searchThisMoveFirst){
+                TTEntry entry = table.get(hash);
+                testCondition = (entry == null || entry.getDepth() < depth);
+                if(testCondition){
+                    moves.remove(Integer.valueOf(bestMoveFound.getMoveLocation()));
+                    moves.add(0, bestMoveFound.getMoveLocation());
+                }
+            }
+            double newestScore;
+            double newAlpha = alpha;
+            double newBeta = beta;
+            for(int moveIndex = 0; moveIndex < moves.size(); moveIndex++){
+                myVirtualBoard.placeStone(moves.get(moveIndex));
+                newestScore = minimax(depth, depth - 1, !isMaximizingPlayer, moves.get(moveIndex), 
+                    generation, newAlpha, newBeta);
+                myVirtualBoard.undoStone();
+                myVirtualBoard.setCandidateMoves(moves);
+                myVirtualBoard.updateEvaluation(moves.get(moveIndex));
+                if(newestScore < bestMove.getScore()){
+                    bestMove.set(moves.get(moveIndex), newestScore);
+                    bestMoveFound = bestMove;
+                }
+                if(bestMove.getScore() < newBeta)
+                    newBeta = bestMove.getScore();
+                if(newBeta <= newAlpha){    // fail high - move too good
+                    prunes++;
+                    int move = bestMove.getMoveLocation();
+                    // if(fix && !threatMapList[G3Constants.FIVE_THREAT_INDEX].containsLocation(move)
+                    // && !threatMapList[G3Constants.FIVE_THREAT_INDEX + 4].containsLocation(move)){
+                    //     killerMoves.addKillerMove(move, depth);
+                    // }
+                    table.add(hash, new TTEntry((int)bestMove.getScore(), depth, TTEntry.UPPER_BOUND, bestMove.getMoveLocation(), generation, hash));
+                    return bestMove;
+                }
+            }
+            if(bestMove.getScore() >= beta){   // fail low - didn't find something better
+                table.add(hash, new TTEntry((int)bestMove.getScore(), depth, TTEntry.LOWER_BOUND, bestMove.getMoveLocation(), generation, hash));
+            }else{
+                table.add(hash, new TTEntry((int)bestMove.getScore(), depth, TTEntry.EXACT, bestMove.getMoveLocation(), generation, hash));
+            }
+            return bestMove;
+        }
+
+    }
+
+    // NOT for root
+    public double minimax(int originalDepth, int depth, boolean isMaximizingPlayer, int movePlayed,
+     int generation, double alpha, double beta) throws TimeoutException{
+        nodes++;
+        if((nodes % 1000) == 0 && System.nanoTime() - startTime >= timeToPlay * 1000000000){
+            throw new TimeoutException();
+        }
+        // check transposition table first to see minimax can be skipped for this node
+        long hash = myVirtualBoard.getCurrentHash();
+       
         TTEntry currentEntry = table.get(hash);
         if(currentEntry != null){
             int tableMove = currentEntry.getBestMove();
@@ -403,21 +538,19 @@ public class Greg3 implements Engine{
                 TThits++;
                 switch(currentEntry.getType()){
                     case TTEntry.EXACT:
-                        if(originalDepth != depth)
-                            return new SuperMove(currentEntry.getBestMove(), currentEntry.getEval());
-                        break;
+                        return currentEntry.getEval();
                     case TTEntry.LOWER_BOUND:
-                        if(currentEntry.getEval() >= beta && originalDepth != depth) {
+                        if(currentEntry.getEval() >= beta) {
                             prunes++;
-                            return new SuperMove(currentEntry.getBestMove(), currentEntry.getEval());
+                            return currentEntry.getEval();
                         }
                         alpha = Math.max(alpha, currentEntry.getEval());
                         break;
 
                     case TTEntry.UPPER_BOUND:
-                        if(currentEntry.getEval() <= alpha && originalDepth != depth) {
+                        if(currentEntry.getEval() <= alpha) {
                             prunes++;
-                            return new SuperMove(currentEntry.getBestMove(), currentEntry.getEval());
+                            return currentEntry.getEval();
                         }
                         beta = Math.min(beta, currentEntry.getEval());
                         break;
@@ -427,35 +560,28 @@ public class Greg3 implements Engine{
 
         int thisPositionEval = myVirtualBoard.updateEvaluation(movePlayed);
         if(depth == 0 || Math.abs(thisPositionEval) >= (G3Constants.GAME_WILL_BE_OVER) || thisPositionEval == G3Constants.GAME_DRAWN){
-            if(originalDepth != depth){
-                if(Math.abs(thisPositionEval) == G3Constants.GAME_OVER){
-                    thisPositionEval += (Math.signum(thisPositionEval) * (20 + depth * 3)); // prioritizes quick win
-                }
-                else if(Math.abs(thisPositionEval) == G3Constants.GAME_WILL_BE_OVER){
-                    prunes++;
-                    thisPositionEval += (Math.signum(thisPositionEval) * depth * 1); // prioritizes quick win
-                }
-                else if(thisPositionEval >= G3Constants.GAME_DRAWN){
-                    thisPositionEval = 0;
-                }
-                // }else if(depth == 0 && fix){
-                //     thisPositionEval = (int)quiescenceSearch(
-                //         QUIESCENCE_DEPTH_LIMIT, QUIESCENCE_DEPTH_LIMIT, isMaximizingPlayer, 
-                //         movePlayed, alpha, beta).getScore();
-                // }
-
-                table.add(hash, new TTEntry(thisPositionEval, depth, TTEntry.EXACT, -1, generation, hash));
-                return new SuperMove(-1, thisPositionEval);
+            if(Math.abs(thisPositionEval) == G3Constants.GAME_OVER){
+                thisPositionEval += (Math.signum(thisPositionEval) * (20 + depth * 3)); // prioritizes quick win
             }
+            else if(Math.abs(thisPositionEval) == G3Constants.GAME_WILL_BE_OVER){
+                prunes++;
+                thisPositionEval += (Math.signum(thisPositionEval) * depth * 1); // prioritizes quick win
+            }
+            else if(thisPositionEval >= G3Constants.GAME_DRAWN){
+                thisPositionEval = 0;
+            }
+
+            table.add(hash, new TTEntry(thisPositionEval, depth, TTEntry.EXACT, -1, generation, hash));
+            return thisPositionEval;
         }
 
         // Futility Pruning
-        if(depth == 1 && depth != originalDepth && Math.abs(thisPositionEval) < 1000){
+        if(depth == 1 && Math.abs(thisPositionEval) < 1000){
             int margin = 150;
             if(isMaximizingPlayer && thisPositionEval + margin < alpha){
-                return new SuperMove(-1, thisPositionEval);
+                return thisPositionEval;
             }else if(!isMaximizingPlayer && thisPositionEval - margin > beta){
-                return new SuperMove(-1, thisPositionEval);
+                return thisPositionEval;
             }
         }
 
@@ -476,255 +602,76 @@ public class Greg3 implements Engine{
         }
         moveEnd = Math.min(moveEnd, moves.size());
         if(isMaximizingPlayer){
-            SuperMove bestMove = new SuperMove(-1, Double.NEGATIVE_INFINITY);
-            orderMoves(moves, threatMapList, hash, plyFromRoot, false);
-            if(searchThisMoveFirst && depth == originalDepth){
-                TTEntry entry = table.get(hash);
-                testCondition = (entry == null || entry.getDepth() < originalDepth);
-                if(testCondition){
-                    moves.remove(Integer.valueOf(bestMoveFound.getMoveLocation()));
-                    moves.add(0, bestMoveFound.getMoveLocation());
-                }
-            }
+            double bestScore = Double.NEGATIVE_INFINITY;
+            int bestMove = moves.get(0);
+            orderMoves(moves, threatMapList, hash, plyFromRoot);
             double newestScore;
             double newAlpha = alpha;
             double newBeta = beta;
             for(int moveIndex = 0; moveIndex < moveEnd; moveIndex++){
                 myVirtualBoard.placeStone(moves.get(moveIndex));
                 newestScore = minimax(originalDepth, depth - 1, !isMaximizingPlayer, moves.get(moveIndex),
-                 generation, newAlpha, newBeta).getScore();
+                 generation, newAlpha, newBeta);
                 myVirtualBoard.undoStone();
                 myVirtualBoard.setCandidateMoves(moves);
                 myVirtualBoard.updateEvaluation(moves.get(moveIndex));
-                if(newestScore > bestMove.getScore()){
-                    bestMove.set(moves.get(moveIndex), newestScore);
-                    if(originalDepth == depth)
-                        bestMoveFound = bestMove;
+                if(newestScore > bestScore){
+                    bestScore = newestScore;
+                    bestMove = moves.get(moveIndex);
                 }
-                if(bestMove.getScore() > newAlpha)
-                    newAlpha = bestMove.getScore();
+                if(bestScore > newAlpha)
+                    newAlpha = bestScore;
                 if(newBeta <= newAlpha){ //fail high - found something too good
                     prunes++;
-                    int move = bestMove.getMoveLocation();
-                    historyTable[move] += depth * depth;
-                    table.add(hash, new TTEntry((int)bestMove.getScore(), depth, TTEntry.LOWER_BOUND, bestMove.getMoveLocation(), generation, hash));
-                    return bestMove;
+                    historyTable[bestMove] += depth * depth;
+                    table.add(hash, new TTEntry((int)bestScore, depth, TTEntry.LOWER_BOUND, bestMove, generation, hash));
+                    return bestScore;
                 }
             }
-            if(bestMove.getScore() <= alpha){   // fail low - didn't find something better
-                table.add(hash, new TTEntry((int)bestMove.getScore(), depth, TTEntry.UPPER_BOUND, bestMove.getMoveLocation(), generation, hash));
+            if(bestScore <= alpha){   // fail low - didn't find something better
+                table.add(hash, new TTEntry((int)bestScore, depth, TTEntry.UPPER_BOUND, bestMove, generation, hash));
             }else{
-                table.add(hash, new TTEntry((int)bestMove.getScore(), depth, TTEntry.EXACT, bestMove.getMoveLocation(), generation, hash));
+                table.add(hash, new TTEntry((int)bestScore, depth, TTEntry.EXACT, bestMove, generation, hash));
             }
-            return bestMove;
+            return bestScore;
         }
 
         else{   // Minimizing Player
-            SuperMove bestMove = new SuperMove(-1, Double.POSITIVE_INFINITY);
-            orderMoves(moves, threatMapList, hash, plyFromRoot, true);
-            if(searchThisMoveFirst && depth == originalDepth){
-                TTEntry entry = table.get(hash);
-                testCondition = (entry == null || entry.getDepth() < originalDepth);
-                if(testCondition){
-                    moves.remove(Integer.valueOf(bestMoveFound.getMoveLocation()));
-                    moves.add(0, bestMoveFound.getMoveLocation());
-                }
-            }
+            double bestScore = Double.POSITIVE_INFINITY;
+            int bestMove = moves.get(0);
+            orderMoves(moves, threatMapList, hash, plyFromRoot);
             double newestScore;
             double newAlpha = alpha;
             double newBeta = beta;
             for(int moveIndex = 0; moveIndex < moveEnd; moveIndex++){
                 myVirtualBoard.placeStone(moves.get(moveIndex));
                 newestScore = minimax(originalDepth, depth - 1, !isMaximizingPlayer, moves.get(moveIndex), 
-                    generation, newAlpha, newBeta).getScore();
+                    generation, newAlpha, newBeta);
                 myVirtualBoard.undoStone();
                 myVirtualBoard.setCandidateMoves(moves);
                 myVirtualBoard.updateEvaluation(moves.get(moveIndex));
-                if(newestScore < bestMove.getScore()){
-                    bestMove.set(moves.get(moveIndex), newestScore);
-                    if(originalDepth == depth)
-                        bestMoveFound = bestMove;
+                if(newestScore < bestScore){
+                    bestScore = newestScore;
+                    bestMove = moves.get(moveIndex);
                 }
-                if(bestMove.getScore() < newBeta)
-                    newBeta = bestMove.getScore();
+                if(bestScore < newBeta)
+                    newBeta = bestScore;
                 if(newBeta <= newAlpha){    // fail high - move too good
                     prunes++;
-                    int move = bestMove.getMoveLocation();
-                    historyTable[move] += depth * depth;
-                    table.add(hash, new TTEntry((int)bestMove.getScore(), depth, TTEntry.UPPER_BOUND, bestMove.getMoveLocation(), generation, hash));
-                    return bestMove;
+                    historyTable[bestMove] += depth * depth;
+                    table.add(hash, new TTEntry((int)bestScore, depth, TTEntry.UPPER_BOUND, bestMove, generation, hash));
+                    return bestScore;
                 }
             }
             //System.out.println("Depth " + depth + ": " + bestMove.getMoveLocation());
-            if(bestMove.getScore() >= beta){   // fail low - didn't find something better
-                table.add(hash, new TTEntry((int)bestMove.getScore(), depth, TTEntry.LOWER_BOUND, bestMove.getMoveLocation(), generation, hash));
+            if(bestScore >= beta){   // fail low - didn't find something better
+                table.add(hash, new TTEntry((int)bestScore, depth, TTEntry.LOWER_BOUND, bestMove, generation, hash));
             }else{
-                table.add(hash, new TTEntry((int)bestMove.getScore(), depth, TTEntry.EXACT, bestMove.getMoveLocation(), generation, hash));
+                table.add(hash, new TTEntry((int)bestScore, depth, TTEntry.EXACT, bestMove, generation, hash));
             }
-            return bestMove;
+            return bestScore;
         }
 
-    }
-
-    private SuperMove quiescenceSearch(int originalDepth, int depth, 
-        boolean isMaximizingPlayer, int movePlayed, double alpha, double beta) throws TimeoutException{
-        nodes++;
-        if((nodes % 100) == 0 && System.nanoTime() - startTime >= timeToPlay * 1000000000){
-            throw new TimeoutException();
-        }
-        // check transposition table first to see minimax can be skipped for this node
-        long hash = Zobrist.computeHash(myVirtualBoard);
-  
-        TTEntry currentEntry = table.get(hash);
-        if(currentEntry != null){
-            int tableMove = currentEntry.getBestMove();
-            if(currentEntry.getDepth() >= depth){
-                TThits++;
-                switch(currentEntry.getType()){
-                    case TTEntry.EXACT:
-                        return new SuperMove(currentEntry.getBestMove(), currentEntry.getEval());
-                    case TTEntry.LOWER_BOUND:
-                        if(currentEntry.getEval() >= beta) {
-                            return new SuperMove(currentEntry.getBestMove(), currentEntry.getEval());
-                        }
-                        alpha = Math.max(alpha, currentEntry.getEval());
-                        break;
-
-                    case TTEntry.UPPER_BOUND:
-                        if(currentEntry.getEval() <= alpha) {
-                            return new SuperMove(currentEntry.getBestMove(), currentEntry.getEval());
-                        }
-                        beta = Math.min(beta, currentEntry.getEval());
-                        break;
-                }
-            }
-        }
-
-        int thisPositionEval = myVirtualBoard.updateEvaluation(movePlayed);
-        ArrayList<Integer> moves = getQuiescenceMoves(hash);
-        //ArrayList<Integer> moves = myVirtualBoard.getCandidateMoves();
-        if(depth == 0 || Math.abs(thisPositionEval) >= (G3Constants.GAME_WILL_BE_OVER) || thisPositionEval == G3Constants.GAME_DRAWN){
-            if(Math.abs(thisPositionEval) == G3Constants.GAME_OVER){
-                thisPositionEval += (Math.signum(thisPositionEval) * (20 + depth * 3)); // prioritizes quick win
-            }
-            else if(Math.abs(thisPositionEval) == G3Constants.GAME_WILL_BE_OVER){
-                thisPositionEval += (Math.signum(thisPositionEval) * depth * 1); // prioritizes quick win
-            }
-            else if(thisPositionEval >= G3Constants.GAME_DRAWN){
-                thisPositionEval = 0;
-            }
-
-            if(depth == 0 && moves.size() != 0){    // forced to stop quiescence search early = penalty
-                if(isOpponentBlack)
-                    thisPositionEval -= UNCERTAINTY_PENALTY;
-                else
-                    thisPositionEval += UNCERTAINTY_PENALTY;
-            }
-            return new SuperMove(-1, thisPositionEval);
-        }
-
-        // if no more quiescent moves, stop the search
-        if(moves.size() == 0){
-            return new SuperMove(-1, thisPositionEval);
-        }
-        LocationList[] threatMapList = myVirtualBoard.fetchThreatMapList();
-        orderMoves(moves, threatMapList, hash, originalDepth - depth, true);
-
-        // Stand pat code
-        // assumes currentEvaluation is a lower bound for what current player can achieve
-        // if currentEvaluation is already too good for the opponent to allow, prune
-        // if(isMaximizingPlayer){
-        //     if(thisPositionEval - SAFETY_MARGIN >= beta){
-        //         return new SuperMove(-1, thisPositionEval);
-        //     }
-        // }else{  // isMinimizingPlayer
-        //     if(thisPositionEval + SAFETY_MARGIN <= alpha){
-        //         return new SuperMove(-1, thisPositionEval);
-        //     }
-        // }
-
-        if(isMaximizingPlayer){
-            SuperMove bestMove = new SuperMove(-1, Double.NEGATIVE_INFINITY);
-            double newestScore;
-            double newAlpha = alpha;
-            double newBeta = beta;
-            for(int moveIndex = 0; moveIndex < moves.size(); moveIndex++){
-                myVirtualBoard.placeStone(moves.get(moveIndex));
-                newestScore = quiescenceSearch(originalDepth, depth - 1, !isMaximizingPlayer,
-                 moves.get(moveIndex), newAlpha, newBeta).getScore();
-                myVirtualBoard.undoStone();
-                //myVirtualBoard.setCandidateMoves(moves);
-                myVirtualBoard.updateEvaluation(moves.get(moveIndex));
-                if(newestScore > bestMove.getScore()){
-                    bestMove.set(moves.get(moveIndex), newestScore);
-                }
-                if(bestMove.getScore() > newAlpha)
-                    newAlpha = bestMove.getScore();
-                if(newBeta <= newAlpha){ //fail high - found something too good
-                    return bestMove;
-                }
-            }
-            return bestMove;
-        }
-
-        else{   // Minimizing Player
-            SuperMove bestMove = new SuperMove(-1, Double.POSITIVE_INFINITY);
-            double newestScore;
-            double newAlpha = alpha;
-            double newBeta = beta;
-            for(int moveIndex = 0; moveIndex < moves.size(); moveIndex++){
-                myVirtualBoard.placeStone(moves.get(moveIndex));
-                newestScore = quiescenceSearch(originalDepth, depth - 1, !isMaximizingPlayer,
-                 moves.get(moveIndex), newAlpha, newBeta).getScore();
-                myVirtualBoard.undoStone();
-                //myVirtualBoard.setCandidateMoves(moves);
-                myVirtualBoard.updateEvaluation(moves.get(moveIndex));
-                if(newestScore < bestMove.getScore()){
-                    bestMove.set(moves.get(moveIndex), newestScore);
-                }
-                if(bestMove.getScore() < newBeta)
-                    newBeta = bestMove.getScore();
-                if(newBeta <= newAlpha){    // fail high - move too good
-                    return bestMove;
-                }
-            }
-            return bestMove;
-        }
-    }
-
-    public ArrayList<Integer> getQuiescenceMoves(long hash){
-        ArrayList<Integer> qMoves = new ArrayList<Integer>();
-        LocationList[] threatMapList = myVirtualBoard.fetchThreatMapList();
-        // first add 5-threats
-        for(int i = G3Constants.FIVE_THREAT_INDEX; i < 5; i += 4){
-            for(int moveIndex = 0; moveIndex < threatMapList[i].getSize(); moveIndex++){
-                qMoves.add(threatMapList[i].getLocation(moveIndex));
-            }
-        }
-        // then add 4-threats
-        for(int i = G3Constants.FOUR_THREAT_INDEX; i < 7; i += 4){
-            for(int moveIndex = 0; moveIndex < threatMapList[i].getSize(); moveIndex++){
-                qMoves.add(threatMapList[i].getLocation(moveIndex));
-            }
-        }
-        //add double 3-threats
-        for(int i = G3Constants.THREE_THREAT_INDEX; i < 8; i += 4){
-            for(int moveIndex = 0; moveIndex < threatMapList[i].getSize(); moveIndex++){
-                int move = threatMapList[i].getLocation(moveIndex);
-                if(threatMapList[i].getLocationInstances(move) > 1)
-                    qMoves.add(threatMapList[i].getLocation(moveIndex));
-            }
-        }
-        // order table move first if existent
-        TTEntry entry = table.get(hash);
-        if(table.get(hash) != null){
-            int move = entry.getBestMove();
-            if(myVirtualBoard.isMoveValid(move)){
-                qMoves.remove(Integer.valueOf(move));
-                qMoves.add(0, move);
-            }
-        }
-        return qMoves;
     }
 
     public boolean equals(Object o){
