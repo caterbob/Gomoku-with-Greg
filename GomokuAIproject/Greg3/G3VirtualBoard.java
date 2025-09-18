@@ -213,13 +213,13 @@ public class G3VirtualBoard extends VirtualBoard{
         if(candidateMoves.size() == 1){ // candidateMoves is from before last move, so now must be 0 (draw)
             evaluation = G3Constants.GAME_DRAWN;
         }
-        if(isBlackTurn){
-            evaluation -= G3Constants.TURN_ADVANTAGE * 0.5;
-        }else{
-            evaluation += G3Constants.TURN_ADVANTAGE * 0.5;
-        }
-        if(Math.abs(evaluation) < 500){
-            evaluation += (int)(Math.random() * 7) - 3;
+        if(Math.abs(evaluation) < 1000){
+            if(isBlackTurn){
+                evaluation -= G3Constants.TURN_ADVANTAGE * 0.5;
+            }else{
+                evaluation += G3Constants.TURN_ADVANTAGE * 0.5;
+            }
+            //evaluation += (int)(Math.random() * 7) - 3;
         }
         return evaluation;
     }

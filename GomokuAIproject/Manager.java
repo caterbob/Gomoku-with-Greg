@@ -75,7 +75,7 @@ public class Manager {
                 // System.out.println("Evaluation: " + depth2Best.getScore() + " Move: " + depth2Best.getMoveLocation());
                 // System.out.println("Evaluation: " + depth1Best.getScore() + " Move: " + depth1Best.getMoveLocation());
             }
-
+            System.out.println(Board.exportGame());
         });
 
         gameLoop.start();

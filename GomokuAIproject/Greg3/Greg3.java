@@ -24,6 +24,8 @@ public class Greg3 implements Engine{
     private int totalDepth;
     private double EFBtotal;
     private double totalGenerations;
+    private int lastEval;
+    private int currentEval;
 
     // stats
     private long startTime;
@@ -84,6 +86,8 @@ public class Greg3 implements Engine{
         killerMoves.clear();
         historyTable = new int[169];
         generation = 0;
+        lastEval = 0;
+        currentEval = 0;
         //System.out.println("Fix? " + fix + ", Average Depth: " + totalDepth / movesPlayed);
         //System.out.println("Average Nodes Per Second: " + (int)((nodes / movesPlayed) / timeToPlay) + " N/s");
     }
@@ -141,6 +145,15 @@ public class Greg3 implements Engine{
         }else{
             System.out.println("You're dead");
         }
+        // lastEval = currentEval;
+        // currentEval = (int)bestMoveFound.getScore() * mySign;
+        // if(lastEval > 90000 && currentEval < 90000){
+        //     System.out.println("opponent black: " + isOpponentBlack);
+        //     System.out.println("next move: " + myMove);
+        //     System.out.println("last eval: " + lastEval);
+        //     System.out.println("c eval: " + currentEval);
+        //     int a = 1 / 0;
+        // }
         //System.out.println("Fix? " + fix + " b: " + ((int)(Math.pow(leafNodes, 0.2)*100.0))/100.0);
 
         return myMove;
