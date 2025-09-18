@@ -552,6 +552,9 @@ public class Greg3 implements Engine{
                         beta = Math.min(beta, currentEntry.getEval());
                         break;
                 }
+                if(beta <= alpha){
+                    return currentEntry.getEval();
+                }
             }
         }
 
@@ -615,14 +618,14 @@ public class Greg3 implements Engine{
                 if(newestScore > bestScore){
                     bestScore = newestScore;
                     bestMove = moves.get(moveIndex);
-                }
-                if(bestScore > newAlpha)
-                    newAlpha = bestScore;
-                if(newBeta <= newAlpha){ //fail high - found something too good
-                    prunes++;
-                    historyTable[bestMove] += depth * depth;
-                    table.add(hash, (int)bestScore, depth, TTEntry.LOWER_BOUND, bestMove, generation);
-                    return bestScore;
+                    if(bestScore > newAlpha)
+                        newAlpha = bestScore;
+                    if(newBeta <= newAlpha){ //fail high - found something too good
+                        prunes++;
+                        historyTable[bestMove] += depth * depth;
+                        table.add(hash, (int)bestScore, depth, TTEntry.LOWER_BOUND, bestMove, generation);
+                        return bestScore;
+                    }
                 }
             }
             if(bestScore <= alpha){   // fail low - didn't find something better
@@ -650,14 +653,14 @@ public class Greg3 implements Engine{
                 if(newestScore < bestScore){
                     bestScore = newestScore;
                     bestMove = moves.get(moveIndex);
-                }
-                if(bestScore < newBeta)
-                    newBeta = bestScore;
-                if(newBeta <= newAlpha){    // fail high - move too good
-                    prunes++;
-                    historyTable[bestMove] += depth * depth;
-                    table.add(hash, (int)bestScore, depth, TTEntry.UPPER_BOUND, bestMove, generation);
-                    return bestScore;
+                    if(bestScore < newBeta)
+                        newBeta = bestScore;
+                    if(newBeta <= newAlpha){    // fail high - move too good
+                        prunes++;
+                        historyTable[bestMove] += depth * depth;
+                        table.add(hash, (int)bestScore, depth, TTEntry.UPPER_BOUND, bestMove, generation);
+                        return bestScore;
+                    }
                 }
             }
             //System.out.println("Depth " + depth + ": " + bestMove.getMoveLocation());
