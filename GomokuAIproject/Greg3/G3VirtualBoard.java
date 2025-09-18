@@ -123,6 +123,7 @@ public class G3VirtualBoard extends VirtualBoard{
         for(int move: Board.getMoveHistory()){
             moveHistory.add(move);
         }
+        currentHash = Zobrist.computeHash(this);
     }
 
     public ArrayList<Integer> getCandidateMoves(){
