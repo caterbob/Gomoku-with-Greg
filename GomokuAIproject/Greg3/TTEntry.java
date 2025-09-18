@@ -15,6 +15,8 @@ public class TTEntry {
     public static final int UPPER_BOUND = 1;
     public static final int LOWER_BOUND = 2;
 
+    public static final int NULL = Integer.MIN_VALUE;
+
     public TTEntry(int eval, int depth, int type, int bestMoveFound, int generation, long hash){
         this.eval = eval;
         this.depth = depth;
@@ -31,6 +33,10 @@ public class TTEntry {
         this.bestMoveFound = toCopy.getBestMove();
         this.generation = toCopy.getGeneration();
         this.hash = toCopy.getHash();
+    }
+
+    public TTEntry(){
+        this.eval = NULL;
     }
 
     public int getEval(){
@@ -55,6 +61,10 @@ public class TTEntry {
 
     public long getHash(){
         return hash;
+    }
+
+    public boolean isEmpty(){
+        return (eval == NULL);
     }
 
     // efficient way to reset TTEntry instead of creating new object

@@ -365,10 +365,10 @@ public class Greg3 implements Engine{
                 dependentTable[move] += 120;
             }
             if(threatMapList[G3Constants.FIVE_THREAT_INDEX].containsLocation(move)){
-                dependentTable[move] += 10000;
+                dependentTable[move] += 1000000;
             }
             if(threatMapList[G3Constants.FIVE_THREAT_INDEX + 4].containsLocation(move)){
-                dependentTable[move] += 10000;
+                dependentTable[move] += 1000000;
             }
         }
         Collections.sort(moves, dependentCompare);
@@ -460,18 +460,15 @@ public class Greg3 implements Engine{
                 if(newBeta <= newAlpha){ //fail high - found something too good
                     prunes++;
                     int move = bestMove.getMoveLocation();
-                    // if(fix && !threatMapList[G3Constants.FIVE_THREAT_INDEX].containsLocation(move)
-                    // && !threatMapList[G3Constants.FIVE_THREAT_INDEX + 4].containsLocation(move)){
-                    //     killerMoves.addKillerMove(move, depth);
-                    // }
-                    table.add(hash, new TTEntry((int)bestMove.getScore(), depth, TTEntry.LOWER_BOUND, bestMove.getMoveLocation(), generation, hash));
+                    historyTable[move] += depth * depth;
+                    table.add(hash, (int)bestMove.getScore(), depth, TTEntry.LOWER_BOUND, bestMove.getMoveLocation(), generation);
                     return bestMove;
                 }
             }
             if(bestMove.getScore() <= alpha){   // fail low - didn't find something better
-                table.add(hash, new TTEntry((int)bestMove.getScore(), depth, TTEntry.UPPER_BOUND, bestMove.getMoveLocation(), generation, hash));
+                table.add(hash, (int)bestMove.getScore(), depth, TTEntry.UPPER_BOUND, bestMove.getMoveLocation(), generation);
             }else{
-                table.add(hash, new TTEntry((int)bestMove.getScore(), depth, TTEntry.EXACT, bestMove.getMoveLocation(), generation, hash));
+                table.add(hash, (int)bestMove.getScore(), depth, TTEntry.EXACT, bestMove.getMoveLocation(), generation);
             }
             return bestMove;
         }
@@ -506,18 +503,15 @@ public class Greg3 implements Engine{
                 if(newBeta <= newAlpha){    // fail high - move too good
                     prunes++;
                     int move = bestMove.getMoveLocation();
-                    // if(fix && !threatMapList[G3Constants.FIVE_THREAT_INDEX].containsLocation(move)
-                    // && !threatMapList[G3Constants.FIVE_THREAT_INDEX + 4].containsLocation(move)){
-                    //     killerMoves.addKillerMove(move, depth);
-                    // }
-                    table.add(hash, new TTEntry((int)bestMove.getScore(), depth, TTEntry.UPPER_BOUND, bestMove.getMoveLocation(), generation, hash));
+                    historyTable[move] += depth * depth;
+                    table.add(hash, (int)bestMove.getScore(), depth, TTEntry.UPPER_BOUND, bestMove.getMoveLocation(), generation);
                     return bestMove;
                 }
             }
             if(bestMove.getScore() >= beta){   // fail low - didn't find something better
-                table.add(hash, new TTEntry((int)bestMove.getScore(), depth, TTEntry.LOWER_BOUND, bestMove.getMoveLocation(), generation, hash));
+                table.add(hash, (int)bestMove.getScore(), depth, TTEntry.LOWER_BOUND, bestMove.getMoveLocation(), generation);
             }else{
-                table.add(hash, new TTEntry((int)bestMove.getScore(), depth, TTEntry.EXACT, bestMove.getMoveLocation(), generation, hash));
+                table.add(hash, (int)bestMove.getScore(), depth, TTEntry.EXACT, bestMove.getMoveLocation(), generation);
             }
             return bestMove;
         }
@@ -574,7 +568,7 @@ public class Greg3 implements Engine{
                 thisPositionEval = 0;
             }
 
-            table.add(hash, new TTEntry(thisPositionEval, depth, TTEntry.EXACT, -1, generation, hash));
+            table.add(hash, thisPositionEval, depth, TTEntry.EXACT, -1, generation);
             return thisPositionEval;
         }
 
@@ -627,14 +621,14 @@ public class Greg3 implements Engine{
                 if(newBeta <= newAlpha){ //fail high - found something too good
                     prunes++;
                     historyTable[bestMove] += depth * depth;
-                    table.add(hash, new TTEntry((int)bestScore, depth, TTEntry.LOWER_BOUND, bestMove, generation, hash));
+                    table.add(hash, (int)bestScore, depth, TTEntry.LOWER_BOUND, bestMove, generation);
                     return bestScore;
                 }
             }
             if(bestScore <= alpha){   // fail low - didn't find something better
-                table.add(hash, new TTEntry((int)bestScore, depth, TTEntry.UPPER_BOUND, bestMove, generation, hash));
+                table.add(hash, (int)bestScore, depth, TTEntry.UPPER_BOUND, bestMove, generation);
             }else{
-                table.add(hash, new TTEntry((int)bestScore, depth, TTEntry.EXACT, bestMove, generation, hash));
+                table.add(hash, (int)bestScore, depth, TTEntry.EXACT, bestMove, generation);
             }
             return bestScore;
         }
@@ -662,15 +656,15 @@ public class Greg3 implements Engine{
                 if(newBeta <= newAlpha){    // fail high - move too good
                     prunes++;
                     historyTable[bestMove] += depth * depth;
-                    table.add(hash, new TTEntry((int)bestScore, depth, TTEntry.UPPER_BOUND, bestMove, generation, hash));
+                    table.add(hash, (int)bestScore, depth, TTEntry.UPPER_BOUND, bestMove, generation);
                     return bestScore;
                 }
             }
             //System.out.println("Depth " + depth + ": " + bestMove.getMoveLocation());
             if(bestScore >= beta){   // fail low - didn't find something better
-                table.add(hash, new TTEntry((int)bestScore, depth, TTEntry.LOWER_BOUND, bestMove, generation, hash));
+                table.add(hash, (int)bestScore, depth, TTEntry.LOWER_BOUND, bestMove, generation);
             }else{
-                table.add(hash, new TTEntry((int)bestScore, depth, TTEntry.EXACT, bestMove, generation, hash));
+                table.add(hash, (int)bestScore, depth, TTEntry.EXACT, bestMove, generation);
             }
             return bestScore;
         }
